@@ -313,7 +313,8 @@ select.form-input{appearance:none}
    הגדרות
 ════════════════════════════════ */
 const SUPABASE_URL  = 'https://bcbnvtszkfjhfujnxldm.supabase.co';
-const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt'; // ← החלף ב-anon key שלך
+const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';
+
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
@@ -433,8 +434,8 @@ function changeDay(d){ curDate=new Date(curDate.getTime()+d*864e5); updateDayLab
 async function loadAppts(){
   if(!BIZ_ID) return;
   document.getElementById('apptsList').innerHTML='<div class="loading"><span></span><span></span><span></span></div>';
-  const dayStart=fmtDate(curDate)+'T00:00:00';
-  const dayEnd  =fmtDate(curDate)+'T23:59:59';
+  const dayStart=fmtDate(curDate)+'T00:00:00+03:00';
+  const dayEnd  =fmtDate(curDate)+'T23:59:59+03:00';
   const {data}=await sb.from('appointments')
     .select('*, customers(name,phone), services(name,duration_minutes), employees(name)')
     .eq('business_id',BIZ_ID)
