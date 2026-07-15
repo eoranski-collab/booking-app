@@ -53,74 +53,79 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    const SUPABASE_URL = 'https://bcbnvtszkfjhfujnxldm.supabase.co';
-    const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';
-    const supabase = window.supabaseClient.createClient(SUPABASE_URL, SUPABASE_ANON);
-
-    const alertEl = document.getElementById('alert');
-    const loginBtn = document.getElementById('loginBtn');
-
-    function showAlert(msg, type = 'error') {
-        alertEl.textContent = msg;
-        alertEl.className = `alert alert-${type} show`;
-    }
-
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        alertEl.className = 'alert';
+    // ============================================
+    // כל הקוד עטוף בפונקציה - אין כפילויות!
+    // ============================================
+    (function() {
+        'use strict';
         
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
+        const SUPABASE_URL = 'https://bcbnvtszkfjhfujnxldm.supabase.co';
+        const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';
+        const sb = window.supabaseClient.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-        if (!email || !password) {
-            showAlert('❌ יש למלא את כל השדות', 'error');
-            return;
+        const alertEl = document.getElementById('alert');
+        const loginBtn = document.getElementById('loginBtn');
+
+        function showAlert(msg, type = 'error') {
+            alertEl.textContent = msg;
+            alertEl.className = `alert alert-${type} show`;
         }
 
-        loginBtn.disabled = true;
-        loginBtn.innerHTML = 'מתחבר...';
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            alertEl.className = 'alert';
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
 
-        try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email: email,
-                password: password
-            });
-
-            if (error) throw new Error(error.message);
-            if (!data.user) throw new Error('לא נמצא משתמש');
-
-            // שמירת מידע
-            localStorage.setItem('user', JSON.stringify(data.user));
-
-            // בדיקת עסק
-            const { data: userData } = await supabase
-                .from('users')
-                .select('business_id')
-                .eq('id', data.user.id)
-                .single();
-
-            if (userData?.business_id) {
-                const { data: business } = await supabase
-                    .from('businesses')
-                    .select('*')
-                    .eq('id', userData.business_id)
-                    .single();
-                if (business) {
-                    localStorage.setItem('business', JSON.stringify(business));
-                }
+            if (!email || !password) {
+                showAlert('❌ יש למלא את כל השדות', 'error');
+                return;
             }
 
-            showAlert('✅ התחברת בהצלחה!', 'success');
-            setTimeout(() => {
-                window.location.href = 'dashboard.html';
-            }, 1000);
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = 'מתחבר...';
 
-        } catch (error) {
-            showAlert('❌ ' + error.message, 'error');
-            loginBtn.disabled = false;
-            loginBtn.innerHTML = 'התחבר';
-        }
-    });
+            try {
+                const { data, error } = await sb.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw new Error(error.message);
+                if (!data.user) throw new Error('לא נמצא משתמש');
+
+                localStorage.setItem('user', JSON.stringify(data.user));
+
+                const { data: userData } = await sb
+                    .from('users')
+                    .select('business_id')
+                    .eq('id', data.user.id)
+                    .single();
+
+                if (userData?.business_id) {
+                    const { data: business } = await sb
+                        .from('businesses')
+                        .select('*')
+                        .eq('id', userData.business_id)
+                        .single();
+                    if (business) {
+                        localStorage.setItem('business', JSON.stringify(business));
+                    }
+                }
+
+                showAlert('✅ התחברת בהצלחה!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+
+            } catch (error) {
+                showAlert('❌ ' + error.message, 'error');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = 'התחבר';
+            }
+        });
+    })();
 </script>
 </body>
 </html>
