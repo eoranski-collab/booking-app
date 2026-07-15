@@ -12,7 +12,6 @@
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             font-family: 'Heebo', sans-serif;
             background: #0f0c29;
@@ -20,8 +19,6 @@
             direction: rtl;
             min-height: 100vh;
         }
-
-        /* ===== HEADER ===== */
         .header {
             background: rgba(255, 255, 255, 0.04);
             backdrop-filter: blur(20px);
@@ -36,7 +33,6 @@
             top: 0;
             z-index: 100;
         }
-
         .header .logo {
             display: flex;
             align-items: center;
@@ -44,13 +40,11 @@
             font-size: 22px;
             font-weight: 900;
         }
-
         .header .logo span {
             background: linear-gradient(135deg, #f093fb, #f5576c);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
         .header .user-area {
             display: flex;
             align-items: center;
@@ -58,12 +52,10 @@
             color: rgba(255, 255, 255, 0.6);
             font-size: 14px;
         }
-
         .header .user-area .name {
             color: #fff;
             font-weight: 600;
         }
-
         .btn-logout {
             background: rgba(255, 255, 255, 0.06);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -74,28 +66,22 @@
             font-family: 'Heebo', sans-serif;
             transition: all 0.3s ease;
         }
-
         .btn-logout:hover {
             background: rgba(245, 87, 108, 0.2);
             border-color: #f5576c;
             color: #fff;
         }
-
-        /* ===== MAIN ===== */
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
-
-        /* ===== סטטיסטיקות ===== */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 16px;
             margin-bottom: 30px;
         }
-
         .stat-card {
             background: rgba(255, 255, 255, 0.04);
             backdrop-filter: blur(12px);
@@ -105,12 +91,10 @@
             text-align: center;
             transition: all 0.3s ease;
         }
-
         .stat-card:hover {
             background: rgba(255, 255, 255, 0.07);
             transform: translateY(-2px);
         }
-
         .stat-card .number {
             font-size: 32px;
             font-weight: 900;
@@ -118,21 +102,17 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
         .stat-card .label {
             font-size: 13px;
             color: rgba(255, 255, 255, 0.4);
             margin-top: 4px;
         }
-
-        /* ===== TABS ===== */
         .tabs {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             margin-bottom: 24px;
         }
-
         .tab {
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.06);
@@ -145,20 +125,16 @@
             font-weight: 500;
             transition: all 0.3s ease;
         }
-
         .tab:hover {
             background: rgba(255, 255, 255, 0.08);
             color: #fff;
         }
-
         .tab.active {
             background: linear-gradient(135deg, #f093fb, #f5576c);
             border-color: transparent;
             color: #fff;
             box-shadow: 0 8px 30px rgba(245, 87, 108, 0.3);
         }
-
-        /* ===== תוכן ===== */
         .tab-content {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(12px);
@@ -167,25 +143,20 @@
             padding: 24px;
             min-height: 300px;
         }
-
         .tab-content h3 {
             font-size: 20px;
             font-weight: 700;
             margin-bottom: 16px;
         }
-
         .empty-state {
             text-align: center;
             padding: 50px 20px;
             color: rgba(255, 255, 255, 0.3);
         }
-
         .empty-state .icon {
             font-size: 48px;
             margin-bottom: 12px;
         }
-
-        /* ===== פריטי תורים ===== */
         .appointment-item {
             display: flex;
             justify-content: space-between;
@@ -195,35 +166,29 @@
             flex-wrap: wrap;
             gap: 10px;
         }
-
         .appointment-item:last-child {
             border-bottom: none;
         }
-
         .appointment-item .info .name {
             font-weight: 600;
             font-size: 16px;
         }
-
         .appointment-item .info .details {
             font-size: 13px;
             color: rgba(255, 255, 255, 0.4);
             margin-top: 2px;
         }
-
         .appointment-item .actions {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-
         .status-badge {
             padding: 4px 14px;
             border-radius: 30px;
             font-size: 12px;
             font-weight: 600;
         }
-
         .status-pending {
             background: rgba(255, 193, 7, 0.2);
             color: #ffc107;
@@ -240,7 +205,6 @@
             background: rgba(66, 153, 225, 0.2);
             color: #4299e1;
         }
-
         .btn-sm {
             background: rgba(255, 255, 255, 0.06);
             border: 1px solid rgba(255, 255, 255, 0.06);
@@ -252,22 +216,17 @@
             font-size: 12px;
             transition: all 0.3s ease;
         }
-
         .btn-sm:hover {
             background: rgba(245, 87, 108, 0.15);
             border-color: #f5576c;
             color: #fff;
         }
-
         .btn-sm.danger:hover {
             background: rgba(245, 87, 108, 0.25);
         }
-
-        /* ===== FORM ===== */
         .form-group {
             margin-bottom: 16px;
         }
-
         .form-group label {
             display: block;
             font-size: 13px;
@@ -275,7 +234,6 @@
             color: rgba(255, 255, 255, 0.6);
             margin-bottom: 4px;
         }
-
         .form-group input,
         .form-group select {
             width: 100%;
@@ -289,31 +247,26 @@
             transition: all 0.3s ease;
             outline: none;
         }
-
         .form-group input:focus,
         .form-group select:focus {
             border-color: #f5576c;
             background: rgba(255, 255, 255, 0.08);
             box-shadow: 0 0 0 3px rgba(245, 87, 108, 0.1);
         }
-
         .form-group select option {
             background: #1a1a2e;
             color: #fff;
         }
-
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
         }
-
         @media (max-width: 600px) {
             .form-row {
                 grid-template-columns: 1fr;
             }
         }
-
         .btn-primary {
             background: linear-gradient(135deg, #f093fb, #f5576c);
             border: none;
@@ -328,19 +281,15 @@
             box-shadow: 0 8px 30px rgba(245, 87, 108, 0.3);
             width: 100%;
         }
-
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 12px 40px rgba(245, 87, 108, 0.5);
         }
-
         .btn-primary:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
-
-        /* ===== Service items ===== */
         .service-item {
             display: flex;
             justify-content: space-between;
@@ -348,21 +297,16 @@
             padding: 12px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
-
         .service-item:last-child {
             border-bottom: none;
         }
-
         .service-item .info .name {
             font-weight: 600;
         }
-
         .service-item .info .meta {
             font-size: 13px;
             color: rgba(255, 255, 255, 0.4);
         }
-
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             .header {
                 padding: 12px 16px;
@@ -380,7 +324,6 @@
                 padding: 16px;
             }
         }
-
         @media (max-width: 480px) {
             .stats-grid {
                 grid-template-columns: 1fr;
@@ -394,8 +337,6 @@
                 flex-wrap: wrap;
             }
         }
-
-        /* ===== SPINNER ===== */
         .spinner {
             display: inline-block;
             width: 20px;
@@ -407,7 +348,6 @@
             vertical-align: middle;
             margin-left: 8px;
         }
-
         @keyframes spin {
             to {
                 transform: rotate(360deg);
@@ -451,10 +391,10 @@
 
         <!-- TABS -->
         <div class="tabs">
-            <button class="tab active" data-tab="today">📅 היום</button>
-            <button class="tab" data-tab="all">📋 כל התורים</button>
-            <button class="tab" data-tab="add">➕ תור חדש</button>
-            <button class="tab" data-tab="services">✂️ שירותים</button>
+            <button class="tab active" onclick="switchTab('today')">📅 היום</button>
+            <button class="tab" onclick="switchTab('all')">📋 כל התורים</button>
+            <button class="tab" onclick="switchTab('add')">➕ תור חדש</button>
+            <button class="tab" onclick="switchTab('services')">✂️ שירותים</button>
         </div>
 
         <!-- TAB CONTENT -->
@@ -594,7 +534,7 @@
         }
 
         // ============================================
-        // RENDER
+        // RENDER FUNCTIONS
         // ============================================
         function renderToday() {
             const today = new Date();
@@ -703,11 +643,16 @@
         }
 
         // ============================================
-        // TAB SYSTEM
+        // SWITCH TAB - GLOBAL FUNCTION
         // ============================================
-        function switchTab(tab) {
+        window.switchTab = function(tab) {
+            // Update active tab
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelector(`.tab[data-tab="${tab}"]`)?.classList.add('active');
+            document.querySelectorAll('.tab').forEach(t => {
+                if (t.textContent.includes(getTabLabel(tab))) {
+                    t.classList.add('active');
+                }
+            });
 
             const container = document.getElementById('tabContent');
             switch (tab) {
@@ -727,10 +672,20 @@
                 default:
                     container.innerHTML = `<div class="empty-state"><p>תוכן לא נמצא</p></div>`;
             }
+        };
+
+        function getTabLabel(tab) {
+            const map = {
+                'today': 'היום',
+                'all': 'כל התורים',
+                'add': 'תור חדש',
+                'services': 'שירותים'
+            };
+            return map[tab] || tab;
         }
 
         // ============================================
-        // ACTIONS
+        // ACTIONS - GLOBAL FUNCTIONS
         // ============================================
         async function handleAddAppointment(e) {
             e.preventDefault();
@@ -774,7 +729,7 @@
 
                 alert('✅ התור נוצר בהצלחה!');
                 await refreshData();
-                switchTab('today');
+                window.switchTab('today');
             } catch (err) {
                 alert('❌ ' + err.message);
             }
@@ -793,7 +748,7 @@
 
                 alert('✅ התור בוטל');
                 await refreshData();
-                switchTab('today');
+                window.switchTab('today');
             } catch (err) {
                 alert('❌ ' + err.message);
             }
@@ -828,7 +783,7 @@
 
                 alert('✅ שירות נוסף!');
                 await refreshData();
-                switchTab('services');
+                window.switchTab('services');
             } catch (err) {
                 alert('❌ ' + err.message);
             }
@@ -847,7 +802,7 @@
 
                 alert('✅ שירות נמחק');
                 await refreshData();
-                switchTab('services');
+                window.switchTab('services');
             } catch (err) {
                 alert('❌ ' + err.message);
             }
@@ -894,15 +849,7 @@
             }
 
             await refreshData();
-
-            // TABS
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    switchTab(tab.dataset.tab);
-                });
-            });
-
-            switchTab('today');
+            window.switchTab('today');
         }
 
         // ============================================
