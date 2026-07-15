@@ -70,100 +70,101 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    (function() {
-        'use strict';
+    // ============================================
+    // גרסה פשוטה שעובדת - בלי כפילויות!
+    // ============================================
+    const SUPABASE_URL = 'https://bcbnvtszkfjhfujnxldm.supabase.co';
+    const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';
+    
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    const alertEl = document.getElementById('alert');
+    const registerBtn = document.getElementById('registerBtn');
+
+    function showAlert(msg, type = 'error') {
+        alertEl.textContent = msg;
+        alertEl.className = `alert alert-${type} show`;
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        alertEl.className = 'alert';
         
-        const SUPABASE_URL = 'https://bcbnvtszkfjhfujnxldm.supabase.co';
-        const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';
-        const sb = window.supabaseClient.createClient(SUPABASE_URL, SUPABASE_ANON);
+        const businessName = document.getElementById('businessName').value.trim();
+        const ownerName = document.getElementById('ownerName').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
 
-        const alertEl = document.getElementById('alert');
-        const registerBtn = document.getElementById('registerBtn');
-
-        function showAlert(msg, type = 'error') {
-            alertEl.textContent = msg;
-            alertEl.className = `alert alert-${type} show`;
+        if (!businessName || !ownerName || !phone || !email || !password) {
+            showAlert('❌ יש למלא את כל השדות', 'error');
+            return;
+        }
+        if (password !== confirmPassword) {
+            showAlert('❌ הסיסמאות אינן תואמות', 'error');
+            return;
+        }
+        if (password.length < 6) {
+            showAlert('❌ הסיסמה חייבת להיות לפחות 6 תווים', 'error');
+            return;
         }
 
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            alertEl.className = 'alert';
-            
-            const businessName = document.getElementById('businessName').value.trim();
-            const ownerName = document.getElementById('ownerName').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
+        registerBtn.disabled = true;
+        registerBtn.innerHTML = 'יוצר חשבון...';
 
-            if (!businessName || !ownerName || !phone || !email || !password) {
-                showAlert('❌ יש למלא את כל השדות', 'error');
-                return;
-            }
-            if (password !== confirmPassword) {
-                showAlert('❌ הסיסמאות אינן תואמות', 'error');
-                return;
-            }
-            if (password.length < 6) {
-                showAlert('❌ הסיסמה חייבת להיות לפחות 6 תווים', 'error');
-                return;
-            }
+        try {
+            const { data: authData, error: authError } = await sb.auth.signUp({
+                email: email,
+                password: password
+            });
 
-            registerBtn.disabled = true;
-            registerBtn.innerHTML = 'יוצר חשבון...';
+            if (authError) throw new Error('שגיאת אימות: ' + authError.message);
+            if (!authData.user) throw new Error('לא נוצר משתמש');
 
-            try {
-                const { data: authData, error: authError } = await sb.auth.signUp({
+            const { data: business, error: bizError } = await sb
+                .from('businesses')
+                .insert([{
+                    name: businessName,
+                    owner_name: ownerName,
                     email: email,
-                    password: password
-                });
+                    phone: phone
+                }])
+                .select()
+                .single();
 
-                if (authError) throw new Error('שגיאת אימות: ' + authError.message);
-                if (!authData.user) throw new Error('לא נוצר משתמש');
+            if (bizError) throw new Error('שגיאה ביצירת העסק: ' + bizError.message);
 
-                const { data: business, error: bizError } = await sb
-                    .from('businesses')
-                    .insert([{
-                        name: businessName,
-                        owner_name: ownerName,
-                        email: email,
-                        phone: phone
-                    }])
-                    .select()
-                    .single();
+            const { error: userError } = await sb
+                .from('users')
+                .insert([{
+                    id: authData.user.id,
+                    business_id: business.id,
+                    email: email,
+                    full_name: ownerName,
+                    role: 'owner'
+                }]);
 
-                if (bizError) throw new Error('שגיאה ביצירת העסק: ' + bizError.message);
-
-                const { error: userError } = await sb
-                    .from('users')
-                    .insert([{
-                        id: authData.user.id,
-                        business_id: business.id,
-                        email: email,
-                        full_name: ownerName,
-                        role: 'owner'
-                    }]);
-
-                if (userError) {
-                    await sb.from('businesses').delete().eq('id', business.id);
-                    throw new Error('שגיאה בקישור המשתמש: ' + userError.message);
-                }
-
-                localStorage.setItem('user', JSON.stringify(authData.user));
-                localStorage.setItem('business', JSON.stringify(business));
-
-                showAlert('🎉 העסק נוצר בהצלחה!', 'success');
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1500);
-
-            } catch (error) {
-                showAlert('❌ ' + error.message, 'error');
-                registerBtn.disabled = false;
-                registerBtn.innerHTML = '🚀 הרשם עכשיו';
+            if (userError) {
+                await sb.from('businesses').delete().eq('id', business.id);
+                throw new Error('שגיאה בקישור המשתמש: ' + userError.message);
             }
-        });
-    })();
+
+            localStorage.setItem('user', JSON.stringify(authData.user));
+            localStorage.setItem('business', JSON.stringify(business));
+
+            showAlert('🎉 העסק נוצר בהצלחה!', 'success');
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 1500);
+
+        } catch (error) {
+            showAlert('❌ ' + error.message, 'error');
+            registerBtn.disabled = false;
+            registerBtn.innerHTML = '🚀 הרשם עכשיו';
+        }
+    });
 </script>
 </body>
 </html>
