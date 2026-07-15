@@ -1,238 +1,915 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>דשבורד - MyCut</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MyCut - דשבורד ניהול</title>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:Arial,sans-serif;background:#f0f2f5;direction:rtl}
-        .header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:20px 30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
-        .header h1{font-size:24px}
-        .header .user-info{display:flex;align-items:center;gap:15px}
-        .header button{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:white;padding:8px 16px;border-radius:8px;cursor:pointer}
-        .header button:hover{background:rgba(255,255,255,0.3)}
-        .container{max-width:1200px;margin:30px auto;padding:0 20px}
-        .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin-bottom:30px}
-        .stat-card{background:white;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);text-align:center}
-        .stat-card .number{font-size:28px;font-weight:bold;color:#667eea}
-        .stat-card .label{color:#666;font-size:14px;margin-top:5px}
-        .section{background:white;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-        .section h2{margin-bottom:15px;color:#333;font-size:20px}
-        .section .empty{text-align:center;padding:30px;color:#999}
-        .appointment-item{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid #eee;flex-wrap:wrap;gap:10px}
-        .appointment-item:last-child{border-bottom:none}
-        .appointment-info{flex:1;min-width:200px}
-        .appointment-info .name{font-weight:bold;font-size:16px}
-        .appointment-info .details{color:#666;font-size:14px;margin-top:3px}
-        .status{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:bold}
-        .status-pending{background:#fff3cd;color:#856404}
-        .status-confirmed{background:#d4edda;color:#155724}
-        .status-cancelled{background:#f8d7da;color:#721c24}
-        .status-completed{background:#cce5ff;color:#004085}
-        .btn{background:#667eea;color:white;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px}
-        .btn:hover{background:#5a67d8}
-        .btn-danger{background:#e53e3e}
-        .btn-danger:hover{background:#c53030}
-        .btn-success{background:#48bb78}
-        .btn-success:hover{background:#38a169}
-        .tabs{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-        .tab{background:#e2e8f0;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:14px}
-        .tab.active{background:#667eea;color:white}
-        .form-group{margin-bottom:15px}
-        .form-group label{display:block;font-weight:bold;margin-bottom:5px;color:#333}
-        .form-group input,.form-group select{width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box}
-        .form-group input:focus,.form-group select:focus{border-color:#667eea;outline:none}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-        @media(max-width:600px){.form-row{grid-template-columns:1fr}}
-        .modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center}
-        .modal.show{display:flex}
-        .modal-content{background:white;border-radius:16px;padding:30px;max-width:500px;width:90%;max-height:90vh;overflow-y:auto}
-        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-        .modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:#999}
-        .service-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eee}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Heebo', sans-serif;
+            background: #0f0c29;
+            color: #fff;
+            direction: rtl;
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 16px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+            font-weight: 900;
+        }
+
+        .header .logo span {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .user-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+
+        .header .user-area .name {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.6);
+            padding: 6px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Heebo', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: rgba(245, 87, 108, 0.2);
+            border-color: #f5576c;
+            color: #fff;
+        }
+
+        /* ===== MAIN ===== */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* ===== סטטיסטיקות ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            transform: translateY(-2px);
+        }
+
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-card .label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 4px;
+        }
+
+        /* ===== TABS ===== */
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .tab {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.5);
+            padding: 10px 22px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Heebo', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 8px 30px rgba(245, 87, 108, 0.3);
+        }
+
+        /* ===== תוכן ===== */
+        .tab-content {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 24px;
+            min-height: 300px;
+        }
+
+        .tab-content h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        /* ===== פריטי תורים ===== */
+        .appointment-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .appointment-item:last-child {
+            border-bottom: none;
+        }
+
+        .appointment-item .info .name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .appointment-item .info .details {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 2px;
+        }
+
+        .appointment-item .actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-badge {
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+        .status-confirmed {
+            background: rgba(72, 187, 120, 0.2);
+            color: #48bb78;
+        }
+        .status-cancelled {
+            background: rgba(245, 87, 108, 0.2);
+            color: #f5576c;
+        }
+        .status-completed {
+            background: rgba(66, 153, 225, 0.2);
+            color: #4299e1;
+        }
+
+        .btn-sm {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.6);
+            padding: 4px 12px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Heebo', sans-serif;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-sm:hover {
+            background: rgba(245, 87, 108, 0.15);
+            border-color: #f5576c;
+            color: #fff;
+        }
+
+        .btn-sm.danger:hover {
+            background: rgba(245, 87, 108, 0.25);
+        }
+
+        /* ===== FORM ===== */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 4px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            color: #fff;
+            font-family: 'Heebo', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #f5576c;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(245, 87, 108, 0.1);
+        }
+
+        .form-group select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            border: none;
+            color: #fff;
+            padding: 14px 32px;
+            border-radius: 30px;
+            font-family: 'Heebo', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 30px rgba(245, 87, 108, 0.3);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(245, 87, 108, 0.5);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ===== Service items ===== */
+        .service-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .service-item:last-child {
+            border-bottom: none;
+        }
+
+        .service-item .info .name {
+            font-weight: 600;
+        }
+
+        .service-item .info .meta {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .header {
+                padding: 12px 16px;
+            }
+            .header .logo {
+                font-size: 18px;
+            }
+            .container {
+                padding: 12px;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .tab-content {
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .appointment-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .appointment-item .actions {
+                justify-content: flex-start;
+                flex-wrap: wrap;
+            }
+        }
+
+        /* ===== SPINNER ===== */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h1>✂️ MyCut - ניהול עסק</h1>
-    <div class="user-info">
-        <span id="businessNameDisplay">טוען...</span>
-        <button onclick="logout()">התנתק</button>
-    </div>
-</div>
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+        <div class="logo">✂️ <span>MyCut</span></div>
+        <div class="user-area">
+            <span>👋 שלום, <span class="name" id="businessName">טוען...</span></span>
+            <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> התנתק</button>
+        </div>
+    </header>
 
-<div class="container">
-    <div class="stats">
-        <div class="stat-card"><div class="number" id="todayCount">0</div><div class="label">📅 תורים היום</div></div>
-        <div class="stat-card"><div class="number" id="pendingCount">0</div><div class="label">⏳ ממתינים</div></div>
-        <div class="stat-card"><div class="number" id="customersCount">0</div><div class="label">👤 לקוחות</div></div>
-        <div class="stat-card"><div class="number" id="servicesCount">0</div><div class="label">✂️ שירותים</div></div>
-    </div>
+    <!-- ===== MAIN ===== -->
+    <div class="container">
 
-    <div class="tabs">
-        <button class="tab active" onclick="switchTab('today')">📅 היום</button>
-        <button class="tab" onclick="switchTab('all')">📋 כל התורים</button>
-        <button class="tab" onclick="switchTab('add')">➕ תור חדש</button>
-        <button class="tab" onclick="switchTab('services')">✂️ שירותים</button>
-    </div>
-
-    <div id="tabContent"></div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-    const SUPABASE_URL = 'https://bcbnvtszkfjhfujnxldm.supabase.co';
-    const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';
-    const supabase = window.supabaseClient.createClient(SUPABASE_URL, SUPABASE_ANON);
-
-    let currentBusiness = null;
-    let currentUser = null;
-    let appointments = [];
-    let services = [];
-
-    function formatTime(d) { return new Date(d).toLocaleTimeString('he-IL', {hour:'2-digit',minute:'2-digit'}); }
-    function formatDate(d) { return new Date(d).toLocaleDateString('he-IL'); }
-    function getStatusLabel(s) {
-        const map = {'pending':'⏳ ממתין','confirmed':'✅ מאושר','cancelled':'❌ מבוטל','completed':'✔️ הושלם'};
-        return map[s]||s;
-    }
-    function getStatusClass(s) {
-        const map = {'pending':'status-pending','confirmed':'status-confirmed','cancelled':'status-cancelled','completed':'status-completed'};
-        return map[s]||'';
-    }
-
-    async function checkAuth() {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { window.location.href = 'login.html'; return null; }
-        currentUser = user;
-        return user;
-    }
-
-    async function getBusiness() {
-        if (!currentUser) return null;
-        const { data: userData } = await supabase.from('users').select('business_id').eq('id', currentUser.id).single();
-        if (!userData) return null;
-        const { data: business } = await supabase.from('businesses').select('*').eq('id', userData.business_id).single();
-        currentBusiness = business;
-        document.getElementById('businessNameDisplay').textContent = business?.name || 'עסק';
-        return business;
-    }
-
-    async function loadAppointments() {
-        if (!currentBusiness) return;
-        const { data, error } = await supabase
-            .from('appointments')
-            .select('*')
-            .eq('business_id', currentBusiness.id)
-            .order('start_time', { ascending: true });
-        if (!error) appointments = data || [];
-        return appointments;
-    }
-
-    async function loadServices() {
-        if (!currentBusiness) return;
-        const { data, error } = await supabase
-            .from('services')
-            .select('*')
-            .eq('business_id', currentBusiness.id)
-            .eq('is_active', true);
-        if (!error) services = data || [];
-        return services;
-    }
-
-    function renderToday() {
-        const today = new Date(); today.setHours(0,0,0,0);
-        const todayApps = appointments.filter(a => new Date(a.start_time) >= today);
-        if (!todayApps.length) return `<div class="empty">📭 אין תורים להיום</div>`;
-        return todayApps.map(a => `
-            <div class="appointment-item">
-                <div class="appointment-info">
-                    <div class="name">${a.customer_name||'לקוח'} - ${a.service_name||'שירות'}</div>
-                    <div class="details">📞 ${a.customer_phone||''} | 🕐 ${formatTime(a.start_time)}</div>
-                </div>
-                <div>
-                    <span class="status ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
-                    ${a.status !== 'cancelled' ? `<button class="btn btn-danger" onclick="cancelAppointment('${a.id}')">❌ בטל</button>` : ''}
-                </div>
+        <!-- סטטיסטיקות -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="number" id="todayCount">0</div>
+                <div class="label">📅 תורים היום</div>
             </div>
-        `).join('');
-    }
-
-    function renderAll() {
-        if (!appointments.length) return `<div class="empty">📭 אין תורים</div>`;
-        return appointments.map(a => `
-            <div class="appointment-item">
-                <div class="appointment-info">
-                    <div class="name">${a.customer_name||'לקוח'} - ${a.service_name||'שירות'}</div>
-                    <div class="details">📅 ${formatDate(a.start_time)} | 🕐 ${formatTime(a.start_time)} | 📞 ${a.customer_phone||''}</div>
-                </div>
-                <div>
-                    <span class="status ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
-                    ${a.status !== 'cancelled' ? `<button class="btn btn-danger" onclick="cancelAppointment('${a.id}')">❌ בטל</button>` : ''}
-                </div>
+            <div class="stat-card">
+                <div class="number" id="pendingCount">0</div>
+                <div class="label">⏳ ממתינים</div>
             </div>
-        `).join('');
-    }
+            <div class="stat-card">
+                <div class="number" id="customersCount">0</div>
+                <div class="label">👤 לקוחות</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="servicesCount">0</div>
+                <div class="label">✂️ שירותים</div>
+            </div>
+        </div>
 
-    function renderAddAppointment() {
-        const serviceOptions = services.map(s => `<option value="${s.id}">${s.name} (${s.duration_minutes}דק', ${s.price}₪)</option>`).join('');
-        return `
-            <h3>➕ תור חדש</h3>
-            <form id="addForm">
-                <div class="form-group"><label>שם לקוח *</label><input type="text" id="cName" required></div>
-                <div class="form-group"><label>טלפון *</label><input type="tel" id="cPhone" required></div>
-                <div class="form-group"><label>שירות *</label><select id="sId" required><option value="">בחר...</option>${serviceOptions}</select></div>
-                <div class="form-row">
-                    <div class="form-group"><label>תאריך *</label><input type="date" id="aDate" required></div>
-                    <div class="form-group"><label>שעה *</label><input type="time" id="aTime" required></div>
-                </div>
-                <button type="submit" class="btn" style="width:100%;padding:12px;font-size:16px">💾 שמור תור</button>
-            </form>
-        `;
-    }
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab active" data-tab="today">📅 היום</button>
+            <button class="tab" data-tab="all">📋 כל התורים</button>
+            <button class="tab" data-tab="add">➕ תור חדש</button>
+            <button class="tab" data-tab="services">✂️ שירותים</button>
+        </div>
 
-    function renderServices() {
-        if (!services.length) {
-            return `<div class="empty">✂️ אין שירותים</div><button class="btn" onclick="showAddService()">➕ הוסף שירות</button>`;
+        <!-- TAB CONTENT -->
+        <div class="tab-content" id="tabContent">
+            <div class="empty-state">
+                <div class="icon">⏳</div>
+                <p>טוען נתונים...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SUPABASE                                    -->
+    <!-- ============================================ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    </script>
+
+    <script>
+        // ============================================
+        // CONFIG
+        // ============================================
+        const SUPABASE_URL = 'https://bcbnvtszkfjhfujnxldm.supabase.co';
+        const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';
+        const { createClient } = supabase;
+        const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+        // ============================================
+        // STATE
+        // ============================================
+        let currentBusiness = null;
+        let currentUser = null;
+        let appointments = [];
+        let services = [];
+
+        // ============================================
+        // HELPERS
+        // ============================================
+        function formatTime(d) {
+            return new Date(d).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
         }
-        return `
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px">
-                <h3>✂️ השירותים שלי</h3>
-                <button class="btn btn-success" onclick="showAddService()">➕ הוסף שירות</button>
-            </div>
-            ${services.map(s => `
-                <div class="service-item">
-                    <div><strong>${s.name}</strong> <span style="color:#666;margin-right:10px">${s.duration_minutes} דקות</span> <span style="color:#667eea;font-weight:bold">${s.price}₪</span></div>
-                    <button class="btn btn-danger" onclick="deleteService('${s.id}')">🗑️</button>
-                </div>
-            `).join('')}
-        `;
-    }
 
-    window.switchTab = function(tab) {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab')[['today','all','add','services'].indexOf(tab)].classList.add('active');
-        const container = document.getElementById('tabContent');
-        switch(tab) {
-            case 'today': container.innerHTML = renderToday(); break;
-            case 'all': container.innerHTML = renderAll(); break;
-            case 'add': container.innerHTML = renderAddAppointment(); break;
-            case 'services': container.innerHTML = renderServices(); break;
+        function formatDate(d) {
+            return new Date(d).toLocaleDateString('he-IL');
         }
-        if (tab === 'add') document.getElementById('addForm')?.addEventListener('submit', handleAddAppointment);
-    };
 
-    async function handleAddAppointment(e) {
-        e.preventDefault();
-        const name = document.getElementById('cName').value.trim();
-        const phone = document.getElementById('cPhone').value.trim();
-        const serviceId = document.getElementById('sId').value;
-        const date = document.getElementById('aDate').value;
-        const time = document.getElementById('aTime').value;
-        if (!name||!phone||!serviceId||!date||!time) { alert('❌ יש למלא הכל'); return; }
-        const service = services.find(s => s.id === serviceId);
-        if (!service) { alert('❌ שירות לא נמצא'); return; }
-        const start = new Date(`${date}T${time}:00`);
-        const end = new Date(start.getTime() + service.duration
+        function getStatusLabel(s) {
+            const map = {
+                'pending': '⏳ ממתין',
+                'confirmed': '✅ מאושר',
+                'cancelled': '❌ מבוטל',
+                'completed': '✔️ הושלם'
+            };
+            return map[s] || s;
+        }
+
+        function getStatusClass(s) {
+            const map = {
+                'pending': 'status-pending',
+                'confirmed': 'status-confirmed',
+                'cancelled': 'status-cancelled',
+                'completed': 'status-completed'
+            };
+            return map[s] || '';
+        }
+
+        // ============================================
+        // AUTH
+        // ============================================
+        async function checkAuth() {
+            const { data: { user } } = await sb.auth.getUser();
+            if (!user) {
+                window.location.href = 'login.html';
+                return null;
+            }
+            currentUser = user;
+            return user;
+        }
+
+        async function getBusiness() {
+            if (!currentUser) return null;
+
+            const { data: userData } = await sb
+                .from('users')
+                .select('business_id')
+                .eq('id', currentUser.id)
+                .single();
+
+            if (!userData) return null;
+
+            const { data: business } = await sb
+                .from('businesses')
+                .select('*')
+                .eq('id', userData.business_id)
+                .single();
+
+            currentBusiness = business;
+            document.getElementById('businessName').textContent = business?.name || 'עסק';
+            return business;
+        }
+
+        // ============================================
+        // DATA
+        // ============================================
+        async function loadAppointments() {
+            if (!currentBusiness) return;
+
+            const { data, error } = await sb
+                .from('appointments')
+                .select('*')
+                .eq('business_id', currentBusiness.id)
+                .order('start_time', { ascending: true });
+
+            if (error) {
+                console.error('❌ שגיאת תורים:', error);
+                return;
+            }
+            appointments = data || [];
+            return appointments;
+        }
+
+        async function loadServices() {
+            if (!currentBusiness) return;
+
+            const { data, error } = await sb
+                .from('services')
+                .select('*')
+                .eq('business_id', currentBusiness.id)
+                .eq('is_active', true);
+
+            if (error) {
+                console.error('❌ שגיאת שירותים:', error);
+                return;
+            }
+            services = data || [];
+            return services;
+        }
+
+        // ============================================
+        // RENDER
+        // ============================================
+        function renderToday() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const todayApps = appointments.filter(a => new Date(a.start_time) >= today);
+
+            if (!todayApps.length) {
+                return `<div class="empty-state"><div class="icon">📭</div><p>אין תורים להיום</p></div>`;
+            }
+
+            return todayApps.map(a => `
+                <div class="appointment-item">
+                    <div class="info">
+                        <div class="name">${a.customer_name || 'לקוח'} — ${a.service_name || 'שירות'}</div>
+                        <div class="details">📞 ${a.customer_phone || ''} • 🕐 ${formatTime(a.start_time)}</div>
+                    </div>
+                    <div class="actions">
+                        <span class="status-badge ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
+                        ${a.status !== 'cancelled' ? `<button class="btn-sm danger" onclick="cancelAppointment('${a.id}')">❌ בטל</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderAll() {
+            if (!appointments.length) {
+                return `<div class="empty-state"><div class="icon">📭</div><p>אין תורים</p></div>`;
+            }
+
+            return appointments.map(a => `
+                <div class="appointment-item">
+                    <div class="info">
+                        <div class="name">${a.customer_name || 'לקוח'} — ${a.service_name || 'שירות'}</div>
+                        <div class="details">📅 ${formatDate(a.start_time)} • 🕐 ${formatTime(a.start_time)} • 📞 ${a.customer_phone || ''}</div>
+                    </div>
+                    <div class="actions">
+                        <span class="status-badge ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
+                        ${a.status !== 'cancelled' ? `<button class="btn-sm danger" onclick="cancelAppointment('${a.id}')">❌ בטל</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderAddAppointment() {
+            const serviceOptions = services.map(s =>
+                `<option value="${s.id}">${s.name} (${s.duration_minutes} דק׳, ${s.price}₪)</option>`
+            ).join('');
+
+            return `
+                <h3>➕ תור חדש</h3>
+                <form id="addForm">
+                    <div class="form-group">
+                        <label>שם לקוח *</label>
+                        <input type="text" id="cName" placeholder="שם הלקוח" required />
+                    </div>
+                    <div class="form-group">
+                        <label>טלפון *</label>
+                        <input type="tel" id="cPhone" placeholder="050-1234567" required />
+                    </div>
+                    <div class="form-group">
+                        <label>שירות *</label>
+                        <select id="sId" required>
+                            <option value="">בחר שירות...</option>
+                            ${serviceOptions}
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>תאריך *</label>
+                            <input type="date" id="aDate" required />
+                        </div>
+                        <div class="form-group">
+                            <label>שעה *</label>
+                            <input type="time" id="aTime" required />
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">💾 שמור תור</button>
+                </form>
+            `;
+        }
+
+        function renderServices() {
+            if (!services.length) {
+                return `
+                    <div class="empty-state"><div class="icon">✂️</div><p>אין שירותים</p></div>
+                    <button class="btn-primary" onclick="showAddService()" style="width:auto;padding:10px 24px;">➕ הוסף שירות</button>
+                `;
+            }
+
+            return `
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+                    <h3>✂️ השירותים שלי</h3>
+                    <button class="btn-primary" onclick="showAddService()" style="width:auto;padding:10px 24px;">➕ הוסף שירות</button>
+                </div>
+                ${services.map(s => `
+                    <div class="service-item">
+                        <div class="info">
+                            <div class="name">${s.name}</div>
+                            <div class="meta">⏱️ ${s.duration_minutes} דקות • 💰 ${s.price}₪</div>
+                        </div>
+                        <button class="btn-sm danger" onclick="deleteService('${s.id}')">🗑️</button>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        // ============================================
+        // TAB SYSTEM
+        // ============================================
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.tab[data-tab="${tab}"]`)?.classList.add('active');
+
+            const container = document.getElementById('tabContent');
+            switch (tab) {
+                case 'today':
+                    container.innerHTML = renderToday();
+                    break;
+                case 'all':
+                    container.innerHTML = renderAll();
+                    break;
+                case 'add':
+                    container.innerHTML = renderAddAppointment();
+                    document.getElementById('addForm')?.addEventListener('submit', handleAddAppointment);
+                    break;
+                case 'services':
+                    container.innerHTML = renderServices();
+                    break;
+                default:
+                    container.innerHTML = `<div class="empty-state"><p>תוכן לא נמצא</p></div>`;
+            }
+        }
+
+        // ============================================
+        // ACTIONS
+        // ============================================
+        async function handleAddAppointment(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('cName').value.trim();
+            const phone = document.getElementById('cPhone').value.trim();
+            const serviceId = document.getElementById('sId').value;
+            const date = document.getElementById('aDate').value;
+            const time = document.getElementById('aTime').value;
+
+            if (!name || !phone || !serviceId || !date || !time) {
+                alert('❌ יש למלא את כל השדות');
+                return;
+            }
+
+            const service = services.find(s => s.id === serviceId);
+            if (!service) {
+                alert('❌ שירות לא נמצא');
+                return;
+            }
+
+            const start = new Date(`${date}T${time}:00`);
+            const end = new Date(start.getTime() + service.duration_minutes * 60000);
+
+            try {
+                const { error } = await sb
+                    .from('appointments')
+                    .insert([{
+                        business_id: currentBusiness.id,
+                        customer_name: name,
+                        customer_phone: phone,
+                        service_id: serviceId,
+                        service_name: service.name,
+                        start_time: start.toISOString(),
+                        end_time: end.toISOString(),
+                        price: service.price,
+                        status: 'confirmed'
+                    }]);
+
+                if (error) throw error;
+
+                alert('✅ התור נוצר בהצלחה!');
+                await refreshData();
+                switchTab('today');
+            } catch (err) {
+                alert('❌ ' + err.message);
+            }
+        }
+
+        window.cancelAppointment = async function(id) {
+            if (!confirm('האם לבטל את התור?')) return;
+
+            try {
+                const { error } = await sb
+                    .from('appointments')
+                    .update({ status: 'cancelled' })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                alert('✅ התור בוטל');
+                await refreshData();
+                switchTab('today');
+            } catch (err) {
+                alert('❌ ' + err.message);
+            }
+        };
+
+        window.showAddService = function() {
+            const name = prompt('📝 שם השירות:');
+            if (!name) return;
+
+            const duration = prompt('⏱️ משך זמן (דקות):');
+            if (!duration || isNaN(duration)) return;
+
+            const price = prompt('💰 מחיר (ש"ח):');
+            if (!price || isNaN(price)) return;
+
+            addService(name, parseInt(duration), parseFloat(price));
+        };
+
+        async function addService(name, duration, price) {
+            try {
+                const { error } = await sb
+                    .from('services')
+                    .insert([{
+                        business_id: currentBusiness.id,
+                        name: name,
+                        duration_minutes: duration,
+                        price: price,
+                        is_active: true
+                    }]);
+
+                if (error) throw error;
+
+                alert('✅ שירות נוסף!');
+                await refreshData();
+                switchTab('services');
+            } catch (err) {
+                alert('❌ ' + err.message);
+            }
+        }
+
+        window.deleteService = async function(id) {
+            if (!confirm('למחוק שירות?')) return;
+
+            try {
+                const { error } = await sb
+                    .from('services')
+                    .update({ is_active: false })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                alert('✅ שירות נמחק');
+                await refreshData();
+                switchTab('services');
+            } catch (err) {
+                alert('❌ ' + err.message);
+            }
+        };
+
+        // ============================================
+        // REFRESH
+        // ============================================
+        async function refreshData() {
+            await loadServices();
+            await loadAppointments();
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const todayApps = appointments.filter(a => new Date(a.start_time) >= today);
+            const pendingApps = appointments.filter(a => a.status === 'pending');
+
+            document.getElementById('todayCount').textContent = todayApps.length;
+            document.getElementById('pendingCount').textContent = pendingApps.length;
+            document.getElementById('customersCount').textContent = appointments.filter(a => a.customer_name).length;
+            document.getElementById('servicesCount').textContent = services.length;
+        }
+
+        // ============================================
+        // LOGOUT
+        // ============================================
+        window.logout = async function() {
+            await sb.auth.signOut();
+            localStorage.clear();
+            window.location.href = 'login.html';
+        };
+
+        // ============================================
+        // INIT
+        // ============================================
+        async function init() {
+            const user = await checkAuth();
+            if (!user) return;
+
+            await getBusiness();
+            if (!currentBusiness) {
+                alert('❌ לא נמצא עסק. אנא צור קשר עם התמיכה.');
+                return;
+            }
+
+            await refreshData();
+
+            // TABS
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    switchTab(tab.dataset.tab);
+                });
+            });
+
+            switchTab('today');
+        }
+
+        // ============================================
+        // START
+        // ============================================
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+
+</body>
+</html>
