@@ -1,627 +1,238 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ניהול עסק - מערכת תורים</title>
-<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --green:#1a5c45;--green-lt:#e8f5f0;--green-bdr:#a8d5c4;
-  --text:#1a1a1a;--text2:#555;--text3:#999;
-  --border:#e0e0e0;--bg:#f5f5f3;--white:#fff;
-  --red:#c0392b;--red-lt:#fdf0ef;
-  --radius:10px;--shadow:0 1px 4px rgba(0,0,0,0.08)
-}
-body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-
-/* ── AUTH SCREEN ── */
-.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem}
-.auth-card{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:2.5rem 2rem;width:100%;max-width:400px;box-shadow:var(--shadow)}
-.auth-logo{text-align:center;margin-bottom:2rem}
-.auth-logo .icon{font-size:40px}
-.auth-logo h1{font-size:22px;font-weight:700;margin-top:8px}
-.auth-logo p{font-size:13px;color:var(--text3);margin-top:4px}
-.auth-tabs{display:flex;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:1.5rem;overflow:hidden}
-.auth-tab{flex:1;padding:10px;text-align:center;font-size:14px;cursor:pointer;color:var(--text2);background:none;border:none;font-family:'Heebo',sans-serif;transition:all 0.15s}
-.auth-tab.active{background:var(--green);color:#fff;font-weight:700}
-.form-row{margin-bottom:1rem}
-.form-lbl{font-size:13px;color:var(--text2);margin-bottom:5px;display:block}
-.form-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;font-family:'Heebo',sans-serif}
-.form-input:focus{outline:none;border-color:var(--green)}
-.btn-green{width:100%;padding:12px;background:var(--green);border:none;border-radius:var(--radius);color:#fff;font-size:15px;font-weight:700;font-family:'Heebo',sans-serif;cursor:pointer;transition:opacity 0.15s;margin-top:4px}
-.btn-green:hover{opacity:0.88}
-.btn-green:disabled{opacity:0.4;cursor:default}
-.auth-err{background:#fdf0ef;border:1px solid #f5c6c2;border-radius:8px;padding:10px 12px;font-size:13px;color:var(--red);margin-bottom:1rem}
-.auth-note{font-size:12px;color:var(--text3);text-align:center;margin-top:1rem}
-
-/* ── APP SHELL ── */
-.app{display:none}
-.topbar{background:var(--green);color:#fff;padding:0 1.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.topbar-left{display:flex;align-items:center;gap:12px}
-.topbar h1{font-size:16px;font-weight:700}
-.topbar-biz{font-size:12px;opacity:0.75}
-.btn-logout{background:rgba(255,255,255,0.15);border:none;border-radius:6px;color:#fff;padding:6px 12px;font-size:13px;cursor:pointer;font-family:'Heebo',sans-serif}
-.btn-logout:hover{background:rgba(255,255,255,0.25)}
-
-.nav{display:flex;background:var(--white);border-bottom:1px solid var(--border);overflow-x:auto}
-.nav-btn{flex:1;min-width:80px;padding:12px 8px;background:none;border:none;border-bottom:2px solid transparent;font-size:13px;color:var(--text2);cursor:pointer;font-family:'Heebo',sans-serif;white-space:nowrap;transition:all 0.15s}
-.nav-btn.active{color:var(--green);border-bottom-color:var(--green);font-weight:700}
-.nav-btn:hover:not(.active){background:var(--bg)}
-
-.page{max-width:700px;margin:0 auto;padding:1.5rem 1rem 4rem}
-.tab-panel{display:none}
-.tab-panel.active{display:block}
-
-/* ── CARDS ── */
-.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;box-shadow:var(--shadow)}
-.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
-.card-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
-
-/* ── TODAY APPOINTMENTS ── */
-.day-nav{display:flex;align-items:center;gap:12px;margin-bottom:1rem}
-.day-nav button{background:none;border:1px solid var(--border);border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:16px}
-.day-nav button:hover{background:var(--bg)}
-.day-label{font-size:15px;font-weight:700;flex:1;text-align:center}
-
-.appt-list{display:flex;flex-direction:column;gap:8px}
-.appt-item{display:grid;grid-template-columns:64px 1fr auto;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg)}
-.appt-time{font-size:18px;font-weight:700;color:var(--green);text-align:center}
-.appt-ampm{font-size:10px;color:var(--text3);text-align:center}
-.appt-name{font-size:14px;font-weight:700}
-.appt-svc{font-size:12px;color:var(--text2)}
-.appt-phone{font-size:12px;color:var(--text3)}
-.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700}
-.badge-ok{background:var(--green-lt);color:var(--green)}
-.badge-cancel{background:var(--red-lt);color:var(--red)}
-.badge-done{background:#f0f0f0;color:var(--text3)}
-.btn-cancel-appt{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--red);cursor:pointer;font-family:'Heebo',sans-serif}
-.btn-cancel-appt:hover{background:var(--red-lt)}
-.empty-state{text-align:center;padding:2.5rem 0;color:var(--text3)}
-.empty-state .em-icon{font-size:36px;margin-bottom:8px}
-
-/* ── SERVICES ── */
-.svc-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
-.svc-row:last-child{border-bottom:none}
-.svc-info .svc-name{font-size:14px;font-weight:700}
-.svc-info .svc-meta{font-size:12px;color:var(--text3);margin-top:2px}
-.svc-actions{display:flex;gap:6px}
-.btn-icon{background:none;border:1px solid var(--border);border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
-.btn-icon:hover{background:var(--bg)}
-.btn-icon.del:hover{background:var(--red-lt);border-color:var(--red)}
-
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem}
-.modal{background:var(--white);border-radius:16px;padding:1.5rem;width:100%;max-width:420px}
-.modal h2{font-size:17px;font-weight:700;margin-bottom:1.25rem}
-.modal-actions{display:flex;gap:8px;margin-top:1.25rem}
-.btn-outline{flex:1;padding:10px;background:none;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:'Heebo',sans-serif;cursor:pointer}
-.btn-outline:hover{background:var(--bg)}
-.btn-solid{flex:1;padding:10px;background:var(--green);border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:700;font-family:'Heebo',sans-serif;cursor:pointer}
-.btn-solid:hover{opacity:0.88}
-
-/* ── HOURS ── */
-.hours-grid{display:flex;flex-direction:column;gap:8px}
-.hours-row{display:grid;grid-template-columns:80px 1fr;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
-.hours-row:last-child{border-bottom:none}
-.day-name{font-size:14px;font-weight:500}
-.hours-inputs{display:flex;align-items:center;gap:8px}
-.hours-inputs input[type=time]{padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:'Heebo',sans-serif;background:var(--bg);width:110px}
-.hours-sep{color:var(--text3);font-size:12px}
-.toggle-day{position:relative;width:40px;height:22px;margin-left:auto}
-.toggle-day input{opacity:0;width:0;height:0}
-.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:20px;cursor:pointer;transition:0.2s}
-.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:white;border-radius:50%;transition:0.2s}
-.toggle-day input:checked+.toggle-slider{background:var(--green)}
-.toggle-day input:checked+.toggle-slider::before{transform:translateX(18px)}
-
-/* ── PROFILE ── */
-.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:480px){.profile-grid{grid-template-columns:1fr}}
-
-/* ── MISC ── */
-.btn-add{display:flex;align-items:center;gap:6px;background:var(--green-lt);border:1px solid var(--green-bdr);border-radius:8px;padding:8px 14px;font-size:13px;color:var(--green);font-weight:700;cursor:pointer;font-family:'Heebo',sans-serif}
-.btn-add:hover{background:var(--green);color:#fff}
-.loading{display:flex;gap:5px;justify-content:center;padding:2rem 0}
-.loading span{width:7px;height:7px;border-radius:50%;background:var(--green-bdr);animation:bounce 1s infinite}
-.loading span:nth-child(2){animation-delay:.2s}
-.loading span:nth-child(3){animation-delay:.4s}
-@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-8px)}}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 20px;border-radius:30px;font-size:13px;z-index:300;opacity:0;transition:opacity 0.3s;pointer-events:none}
-.toast.show{opacity:1}
-.hidden{display:none!important}
-select.form-input{appearance:none}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>דשבורד - MyCut</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Arial,sans-serif;background:#f0f2f5;direction:rtl}
+        .header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:20px 30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+        .header h1{font-size:24px}
+        .header .user-info{display:flex;align-items:center;gap:15px}
+        .header button{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:white;padding:8px 16px;border-radius:8px;cursor:pointer}
+        .header button:hover{background:rgba(255,255,255,0.3)}
+        .container{max-width:1200px;margin:30px auto;padding:0 20px}
+        .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin-bottom:30px}
+        .stat-card{background:white;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);text-align:center}
+        .stat-card .number{font-size:28px;font-weight:bold;color:#667eea}
+        .stat-card .label{color:#666;font-size:14px;margin-top:5px}
+        .section{background:white;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+        .section h2{margin-bottom:15px;color:#333;font-size:20px}
+        .section .empty{text-align:center;padding:30px;color:#999}
+        .appointment-item{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid #eee;flex-wrap:wrap;gap:10px}
+        .appointment-item:last-child{border-bottom:none}
+        .appointment-info{flex:1;min-width:200px}
+        .appointment-info .name{font-weight:bold;font-size:16px}
+        .appointment-info .details{color:#666;font-size:14px;margin-top:3px}
+        .status{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:bold}
+        .status-pending{background:#fff3cd;color:#856404}
+        .status-confirmed{background:#d4edda;color:#155724}
+        .status-cancelled{background:#f8d7da;color:#721c24}
+        .status-completed{background:#cce5ff;color:#004085}
+        .btn{background:#667eea;color:white;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px}
+        .btn:hover{background:#5a67d8}
+        .btn-danger{background:#e53e3e}
+        .btn-danger:hover{background:#c53030}
+        .btn-success{background:#48bb78}
+        .btn-success:hover{background:#38a169}
+        .tabs{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+        .tab{background:#e2e8f0;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:14px}
+        .tab.active{background:#667eea;color:white}
+        .form-group{margin-bottom:15px}
+        .form-group label{display:block;font-weight:bold;margin-bottom:5px;color:#333}
+        .form-group input,.form-group select{width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box}
+        .form-group input:focus,.form-group select:focus{border-color:#667eea;outline:none}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+        @media(max-width:600px){.form-row{grid-template-columns:1fr}}
+        .modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center}
+        .modal.show{display:flex}
+        .modal-content{background:white;border-radius:16px;padding:30px;max-width:500px;width:90%;max-height:90vh;overflow-y:auto}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+        .modal-close{background:none;border:none;font-size:24px;cursor:pointer;color:#999}
+        .service-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #eee}
+    </style>
 </head>
 <body>
 
-<!-- ════════════════════════════════
-     מסך כניסה / הרשמה
-════════════════════════════════ -->
-<div class="auth-wrap" id="authScreen">
-  <div class="auth-card">
-    <div class="auth-logo">
-      <div class="icon">✂️</div>
-      <h1>מערכת תורים</h1>
-      <p>ניהול עסק חכם</p>
+<div class="header">
+    <h1>✂️ MyCut - ניהול עסק</h1>
+    <div class="user-info">
+        <span id="businessNameDisplay">טוען...</span>
+        <button onclick="logout()">התנתק</button>
     </div>
-    <div id="authErr" class="auth-err hidden"></div>
-    <div class="auth-tabs">
-      <button class="auth-tab active" onclick="switchTab('login')">כניסה</button>
-      <button class="auth-tab" onclick="switchTab('register')">הרשמה</button>
-    </div>
-
-    <div id="loginForm">
-      <div class="form-row">
-        <label class="form-lbl">אימייל</label>
-        <input class="form-input" id="loginEmail" type="email" placeholder="name@example.com">
-      </div>
-      <div class="form-row">
-        <label class="form-lbl">סיסמה</label>
-        <input class="form-input" id="loginPass" type="password" placeholder="••••••••">
-      </div>
-      <button class="btn-green" onclick="doLogin()">כניסה</button>
-    </div>
-
-    <div id="registerForm" class="hidden">
-      <div class="form-row">
-        <label class="form-lbl">שם העסק</label>
-        <input class="form-input" id="regBizName" type="text" placeholder="מספרת דני">
-      </div>
-      <div class="form-row">
-        <label class="form-lbl">אימייל</label>
-        <input class="form-input" id="regEmail" type="email" placeholder="name@example.com">
-      </div>
-      <div class="form-row">
-        <label class="form-lbl">סיסמה (לפחות 6 תווים)</label>
-        <input class="form-input" id="regPass" type="password" placeholder="••••••••">
-      </div>
-      <div class="form-row">
-        <label class="form-lbl">טלפון</label>
-        <input class="form-input" id="regPhone" type="tel" placeholder="050-0000000">
-      </div>
-      <button class="btn-green" onclick="doRegister()">יצירת חשבון</button>
-    </div>
-    <p class="auth-note">כניסתך מאובטחת ומוצפנת</p>
-  </div>
 </div>
 
-<!-- ════════════════════════════════
-     אפליקציה ראשית
-════════════════════════════════ -->
-<div class="app" id="app">
-  <div class="topbar">
-    <div class="topbar-left">
-      <span style="font-size:22px">✂️</span>
-      <div>
-        <div class="topbar-biz">מערכת תורים</div>
-        <h1 id="topBizName">-</h1>
-      </div>
-    </div>
-    <button class="btn-logout" onclick="doLogout()">יציאה</button>
-  </div>
-
-  <div class="nav">
-    <button class="nav-btn active" onclick="switchTab2('appts')"  >📅 תורים</button>
-    <button class="nav-btn"        onclick="switchTab2('services')">✂️ שירותים</button>
-    <button class="nav-btn"        onclick="switchTab2('hours')"   >🕐 שעות</button>
-    <button class="nav-btn"        onclick="switchTab2('profile')" >⚙️ הגדרות</button>
-  </div>
-
-  <div class="page">
-
-    <!-- ── תורים ── -->
-    <div class="tab-panel active" id="tab-appts">
-      <div class="day-nav">
-        <button onclick="changeDay(-1)">›</button>
-        <div class="day-label" id="dayLabel">-</div>
-        <button onclick="changeDay(1)">‹</button>
-      </div>
-      <div id="apptsList"><div class="loading"><span></span><span></span><span></span></div></div>
+<div class="container">
+    <div class="stats">
+        <div class="stat-card"><div class="number" id="todayCount">0</div><div class="label">📅 תורים היום</div></div>
+        <div class="stat-card"><div class="number" id="pendingCount">0</div><div class="label">⏳ ממתינים</div></div>
+        <div class="stat-card"><div class="number" id="customersCount">0</div><div class="label">👤 לקוחות</div></div>
+        <div class="stat-card"><div class="number" id="servicesCount">0</div><div class="label">✂️ שירותים</div></div>
     </div>
 
-    <!-- ── שירותים ── -->
-    <div class="tab-panel" id="tab-services">
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title">✂️ השירותים שלך</div>
-          <button class="btn-add" onclick="openSvcModal()">+ הוסף שירות</button>
-        </div>
-        <div id="svcList"><div class="loading"><span></span><span></span><span></span></div></div>
-      </div>
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('today')">📅 היום</button>
+        <button class="tab" onclick="switchTab('all')">📋 כל התורים</button>
+        <button class="tab" onclick="switchTab('add')">➕ תור חדש</button>
+        <button class="tab" onclick="switchTab('services')">✂️ שירותים</button>
     </div>
 
-    <!-- ── שעות עבודה ── -->
-    <div class="tab-panel" id="tab-hours">
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title">🕐 שעות עבודה</div>
-          <button class="btn-add" onclick="saveHours()">💾 שמור</button>
-        </div>
-        <div class="hours-grid" id="hoursGrid"></div>
-      </div>
-    </div>
-
-    <!-- ── הגדרות ── -->
-    <div class="tab-panel" id="tab-profile">
-      <div class="card">
-        <div class="card-title" style="margin-bottom:1rem">⚙️ פרטי העסק</div>
-        <div class="profile-grid">
-          <div class="form-row">
-            <label class="form-lbl">שם העסק</label>
-            <input class="form-input" id="pBizName" type="text">
-          </div>
-          <div class="form-row">
-            <label class="form-lbl">טלפון</label>
-            <input class="form-input" id="pPhone" type="tel">
-          </div>
-          <div class="form-row">
-            <label class="form-lbl">אימייל</label>
-            <input class="form-input" id="pEmail" type="email">
-          </div>
-          <div class="form-row">
-            <label class="form-lbl">כתובת URL לתורים</label>
-            <input class="form-input" id="pSlug" type="text" placeholder="dani-barbershop">
-          </div>
-        </div>
-        <button class="btn-green" style="width:auto;padding:10px 24px;margin-top:8px" onclick="saveProfile()">שמור שינויים</button>
-      </div>
-
-      <div class="card">
-        <div class="card-title" style="margin-bottom:8px">🔗 קישור הזמנה ללקוחות</div>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:12px">שלח את הקישור הזה ללקוחות שלך לקביעת תורים:</p>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input class="form-input" id="bookingLink" readonly style="flex:1;background:#f9f9f9">
-          <button class="btn-add" onclick="copyLink()">📋 העתק</button>
-        </div>
-      </div>
-    </div>
-
-  </div>
+    <div id="tabContent"></div>
 </div>
 
-<!-- ════════════════════════════════
-     מודל הוספת / עריכת שירות
-════════════════════════════════ -->
-<div class="modal-overlay hidden" id="svcModal">
-  <div class="modal">
-    <h2 id="svcModalTitle">הוספת שירות</h2>
-    <div class="form-row">
-      <label class="form-lbl">שם השירות</label>
-      <input class="form-input" id="mSvcName" type="text" placeholder="תספורת">
-    </div>
-    <div class="form-row">
-      <label class="form-lbl">משך (דקות)</label>
-      <input class="form-input" id="mSvcDur" type="number" placeholder="30" min="5" step="5">
-    </div>
-    <div class="form-row">
-      <label class="form-lbl">מחיר (₪)</label>
-      <input class="form-input" id="mSvcPrice" type="number" placeholder="80" min="0">
-    </div>
-    <div class="modal-actions">
-      <button class="btn-outline" onclick="closeSvcModal()">ביטול</button>
-      <button class="btn-solid" onclick="saveSvc()">שמור</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-/* ════════════════════════════════
-   הגדרות
-════════════════════════════════ */
-const SUPABASE_URL  = 'https://bcbnvtszkfjhfujnxldm.supabase.co';
-const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';
+    const SUPABASE_URL = 'https://bcbnvtszkfjhfujnxldm.supabase.co';
+    const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';
+    const supabase = window.supabaseClient.createClient(SUPABASE_URL, SUPABASE_ANON);
 
+    let currentBusiness = null;
+    let currentUser = null;
+    let appointments = [];
+    let services = [];
 
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-
-let BIZ_ID = null, BIZ_DATA = null;
-let editSvcId = null;
-let curDate = new Date();
-
-const HEB_DAYS   = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
-const HEB_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
-const pad = n => String(n).padStart(2,'0');
-const fmtDate = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-
-/* ════════════════════════════════
-   AUTH
-════════════════════════════════ */
-function switchTab(t){
-  document.getElementById('loginForm').classList.toggle('hidden', t!=='login');
-  document.getElementById('registerForm').classList.toggle('hidden', t!=='register');
-  document.querySelectorAll('.auth-tab').forEach((b,i)=>b.classList.toggle('active',(i===0&&t==='login')||(i===1&&t==='register')));
-  hideErr();
-}
-
-function showErr(msg){ const e=document.getElementById('authErr'); e.textContent=msg; e.classList.remove('hidden'); }
-function hideErr(){ document.getElementById('authErr').classList.add('hidden'); }
-
-async function doLogin(){
-  hideErr();
-  const email=document.getElementById('loginEmail').value.trim();
-  const pass =document.getElementById('loginPass').value;
-  if(!email||!pass){ showErr('נא למלא אימייל וסיסמה'); return; }
-  const {error}=await sb.auth.signInWithPassword({email,password:pass});
-  if(error) showErr('אימייל או סיסמה שגויים');
-}
-
-async function doRegister(){
-  hideErr();
-  const bizName=document.getElementById('regBizName').value.trim();
-  const email  =document.getElementById('regEmail').value.trim();
-  const pass   =document.getElementById('regPass').value;
-  const phone  =document.getElementById('regPhone').value.trim();
-  if(!bizName||!email||!pass){ showErr('נא למלא את כל השדות'); return; }
-  if(pass.length<6){ showErr('הסיסמה חייבת להכיל לפחות 6 תווים'); return; }
-
-  const {data,error}=await sb.auth.signUp({email,password:pass});
-  if(error){ showErr(error.message); return; }
-
-  const slug = bizName.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'') + '-' + Date.now().toString().slice(-4);
-  await sb.from('businesses').insert({name:bizName, slug, contact_email:email, contact_phone:phone});
-
-  toast('✅ חשבון נוצר! כעת נכנסים...');
-}
-
-async function doLogout(){
-  await sb.auth.signOut();
-  document.getElementById('app').style.display='none';
-  document.getElementById('authScreen').style.display='flex';
-}
-
-/* מאזין לשינוי auth */
-sb.auth.onAuthStateChange(async (event, session) => {
-  if(session){
-    document.getElementById('authScreen').style.display='none';
-    await loadBizData();
-    document.getElementById('app').style.display='block';
-    initApp();
-  }
-});
-
-/* ════════════════════════════════
-   טעינת נתוני עסק
-════════════════════════════════ */
-async function loadBizData(){
-  const {data:user}=await sb.auth.getUser();
-  const {data:biz}=await sb.from('businesses')
-    .select('*')
-    .eq('contact_email', user.user.email)
-    .single();
-  if(biz){ BIZ_ID=biz.id; BIZ_DATA=biz; }
-}
-
-/* ════════════════════════════════
-   אתחול אפליקציה
-════════════════════════════════ */
-function initApp(){
-  if(!BIZ_DATA) return;
-  document.getElementById('topBizName').textContent = BIZ_DATA.name;
-  updateDayLabel();
-  loadAppts();
-  loadServices();
-  loadHours();
-  fillProfile();
-}
-
-/* ════════════════════════════════
-   ניווט בין לשוניות
-════════════════════════════════ */
-function switchTab2(name){
-  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
-  event.currentTarget.classList.add('active');
-}
-
-/* ════════════════════════════════
-   תורים
-════════════════════════════════ */
-function updateDayLabel(){
-  const now=new Date();
-  const isToday=fmtDate(curDate)===fmtDate(now);
-  const isTomorrow=fmtDate(curDate)===fmtDate(new Date(now.getTime()+864e5));
-  let prefix=isToday?'היום - ':isTomorrow?'מחר - ':'';
-  document.getElementById('dayLabel').textContent=`${prefix}${HEB_DAYS[curDate.getDay()]} ${curDate.getDate()} ${HEB_MONTHS[curDate.getMonth()]}`;
-}
-
-function changeDay(d){ curDate=new Date(curDate.getTime()+d*864e5); updateDayLabel(); loadAppts(); }
-
-async function loadAppts(){
-  if(!BIZ_ID) return;
-  document.getElementById('apptsList').innerHTML='<div class="loading"><span></span><span></span><span></span></div>';
-  const dayStart=fmtDate(curDate)+'T00:00:00+03:00';
-  const dayEnd  =fmtDate(curDate)+'T23:59:59+03:00';
-  const {data}=await sb.from('appointments')
-    .select('*, customers(name,phone), services(name,duration_minutes), employees(name)')
-    .eq('business_id',BIZ_ID)
-    .gte('start_time',dayStart).lte('start_time',dayEnd)
-    .order('start_time');
-
-  if(!data||!data.length){
-    document.getElementById('apptsList').innerHTML=`
-      <div class="empty-state"><div class="em-icon">📭</div>אין תורים ביום זה</div>`;
-    return;
-  }
-
-  document.getElementById('apptsList').innerHTML=`<div class="appt-list">${data.map(a=>{
-    const t=new Date(a.start_time);
-    const hour=`${pad(t.getHours())}:${pad(t.getMinutes())}`;
-    const badge=a.status==='confirmed'?'badge-ok':a.status==='cancelled'?'badge-cancel':'badge-done';
-    const statusLabel={'confirmed':'מאושר','cancelled':'בוטל','completed':'הושלם','no_show':'לא הגיע'}[a.status]||a.status;
-    return `<div class="appt-item">
-      <div><div class="appt-time">${hour}</div></div>
-      <div>
-        <div class="appt-name">${a.customers?.name||'-'}</div>
-        <div class="appt-svc">${a.services?.name||'-'} · ${a.employees?.name||'-'}</div>
-        <div class="appt-phone">${a.customers?.phone||''}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-        <span class="badge ${badge}">${statusLabel}</span>
-        ${a.status==='confirmed'?`<button class="btn-cancel-appt" onclick="cancelAppt('${a.id}')">ביטול</button>`:''}
-      </div>
-    </div>`;
-  }).join('')}</div>`;
-}
-
-async function cancelAppt(id){
-  if(!confirm('לבטל את התור?')) return;
-  await sb.from('appointments').update({status:'cancelled'}).eq('id',id);
-  toast('🗑️ התור בוטל');
-  loadAppts();
-}
-
-/* ════════════════════════════════
-   שירותים
-════════════════════════════════ */
-async function loadServices(){
-  if(!BIZ_ID) return;
-  const {data}=await sb.from('services').select('*').eq('business_id',BIZ_ID).order('created_at');
-  if(!data||!data.length){
-    document.getElementById('svcList').innerHTML='<div style="color:var(--text3);font-size:13px;padding:8px 0">אין שירותים עדיין - הוסף שירות ראשון</div>';
-    return;
-  }
-  document.getElementById('svcList').innerHTML=data.map(s=>`
-    <div class="svc-row">
-      <div class="svc-info">
-        <div class="svc-name">${s.name}</div>
-        <div class="svc-meta">${s.duration_minutes} דקות · ${s.price?'₪'+s.price:'ללא עלות'}</div>
-      </div>
-      <div class="svc-actions">
-        <button class="btn-icon" onclick="openSvcModal('${s.id}','${s.name}',${s.duration_minutes},${s.price||0})" title="עריכה">✏️</button>
-        <button class="btn-icon del" onclick="deleteSvc('${s.id}')" title="מחיקה">🗑️</button>
-      </div>
-    </div>`).join('');
-}
-
-function openSvcModal(id,name,dur,price){
-  editSvcId=id||null;
-  document.getElementById('svcModalTitle').textContent=id?'עריכת שירות':'הוספת שירות';
-  document.getElementById('mSvcName').value=name||'';
-  document.getElementById('mSvcDur').value=dur||'';
-  document.getElementById('mSvcPrice').value=price||'';
-  document.getElementById('svcModal').classList.remove('hidden');
-}
-function closeSvcModal(){ document.getElementById('svcModal').classList.add('hidden'); editSvcId=null; }
-
-async function saveSvc(){
-  const name =document.getElementById('mSvcName').value.trim();
-  const dur  =parseInt(document.getElementById('mSvcDur').value);
-  const price=parseFloat(document.getElementById('mSvcPrice').value)||null;
-  if(!name||!dur){ toast('⚠️ שם ומשך חובה'); return; }
-  if(editSvcId){
-    await sb.from('services').update({name,duration_minutes:dur,price}).eq('id',editSvcId);
-    toast('✅ שירות עודכן');
-  } else {
-    await sb.from('services').insert({business_id:BIZ_ID,name,duration_minutes:dur,price});
-    toast('✅ שירות נוסף');
-  }
-  closeSvcModal(); loadServices();
-}
-
-async function deleteSvc(id){
-  if(!confirm('למחוק שירות זה?')) return;
-  await sb.from('services').delete().eq('id',id);
-  toast('🗑️ שירות נמחק'); loadServices();
-}
-
-/* ════════════════════════════════
-   שעות עבודה
-════════════════════════════════ */
-let hoursData = {};
-
-async function loadHours(){
-  /* טוען את העובד הראשון של העסק */
-  const {data:emps}=await sb.from('employees').select('id').eq('business_id',BIZ_ID).eq('is_active',true).limit(1);
-  if(!emps||!emps.length){ renderHoursForm(null,[]); return; }
-  const empId=emps[0].id;
-  const {data}=await sb.from('employee_availability').select('*').eq('employee_id',empId);
-  hoursData={empId, rows: data||[]};
-  renderHoursForm(empId, data||[]);
-}
-
-function renderHoursForm(empId, rows){
-  const byDay={};
-  rows.forEach(r=>byDay[r.day_of_week]=r);
-  document.getElementById('hoursGrid').innerHTML=HEB_DAYS.map((day,i)=>{
-    const r=byDay[i];
-    return `<div class="hours-row">
-      <div class="day-name">${day}</div>
-      <div class="hours-inputs">
-        <label class="toggle-day">
-          <input type="checkbox" id="day_on_${i}" ${r?'checked':''} onchange="toggleDay(${i})">
-          <span class="toggle-slider"></span>
-        </label>
-        <input type="time" id="day_start_${i}" value="${r?r.start_time.slice(0,5):'09:00'}" ${r?'':'disabled'}>
-        <span class="hours-sep">עד</span>
-        <input type="time" id="day_end_${i}" value="${r?r.end_time.slice(0,5):'17:00'}" ${r?'':'disabled'}>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function toggleDay(i){
-  const on=document.getElementById('day_on_'+i).checked;
-  document.getElementById('day_start_'+i).disabled=!on;
-  document.getElementById('day_end_'+i).disabled=!on;
-}
-
-async function saveHours(){
-  if(!hoursData.empId){ toast('⚠️ אין עובד להגדרת שעות'); return; }
-  await sb.from('employee_availability').delete().eq('employee_id',hoursData.empId);
-  const rows=[];
-  for(let i=0;i<7;i++){
-    if(document.getElementById('day_on_'+i).checked){
-      rows.push({employee_id:hoursData.empId, day_of_week:i,
-        start_time:document.getElementById('day_start_'+i).value+':00',
-        end_time:  document.getElementById('day_end_'+i).value+':00'});
+    function formatTime(d) { return new Date(d).toLocaleTimeString('he-IL', {hour:'2-digit',minute:'2-digit'}); }
+    function formatDate(d) { return new Date(d).toLocaleDateString('he-IL'); }
+    function getStatusLabel(s) {
+        const map = {'pending':'⏳ ממתין','confirmed':'✅ מאושר','cancelled':'❌ מבוטל','completed':'✔️ הושלם'};
+        return map[s]||s;
     }
-  }
-  if(rows.length) await sb.from('employee_availability').insert(rows);
-  toast('✅ שעות עבודה נשמרו');
-}
+    function getStatusClass(s) {
+        const map = {'pending':'status-pending','confirmed':'status-confirmed','cancelled':'status-cancelled','completed':'status-completed'};
+        return map[s]||'';
+    }
 
-/* ════════════════════════════════
-   פרופיל / הגדרות
-════════════════════════════════ */
-function fillProfile(){
-  if(!BIZ_DATA) return;
-  document.getElementById('pBizName').value=BIZ_DATA.name||'';
-  document.getElementById('pPhone').value=BIZ_DATA.contact_phone||'';
-  document.getElementById('pEmail').value=BIZ_DATA.contact_email||'';
-  document.getElementById('pSlug').value=BIZ_DATA.slug||'';
-  document.getElementById('bookingLink').value=`${location.origin}/booking.html?biz=${BIZ_DATA.slug}`;
-}
+    async function checkAuth() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { window.location.href = 'login.html'; return null; }
+        currentUser = user;
+        return user;
+    }
 
-async function saveProfile(){
-  const name =document.getElementById('pBizName').value.trim();
-  const phone=document.getElementById('pPhone').value.trim();
-  const email=document.getElementById('pEmail').value.trim();
-  const slug =document.getElementById('pSlug').value.trim();
-  await sb.from('businesses').update({name,contact_phone:phone,contact_email:email,slug}).eq('id',BIZ_ID);
-  BIZ_DATA={...BIZ_DATA,name,contact_phone:phone,contact_email:email,slug};
-  document.getElementById('topBizName').textContent=name;
-  document.getElementById('bookingLink').value=`${location.origin}/booking.html?biz=${slug}`;
-  toast('✅ פרטים נשמרו');
-}
+    async function getBusiness() {
+        if (!currentUser) return null;
+        const { data: userData } = await supabase.from('users').select('business_id').eq('id', currentUser.id).single();
+        if (!userData) return null;
+        const { data: business } = await supabase.from('businesses').select('*').eq('id', userData.business_id).single();
+        currentBusiness = business;
+        document.getElementById('businessNameDisplay').textContent = business?.name || 'עסק';
+        return business;
+    }
 
-function copyLink(){
-  const link=document.getElementById('bookingLink').value;
-  navigator.clipboard.writeText(link).then(()=>toast('📋 קישור הועתק!'));
-}
+    async function loadAppointments() {
+        if (!currentBusiness) return;
+        const { data, error } = await supabase
+            .from('appointments')
+            .select('*')
+            .eq('business_id', currentBusiness.id)
+            .order('start_time', { ascending: true });
+        if (!error) appointments = data || [];
+        return appointments;
+    }
 
-/* ════════════════════════════════
-   Toast
-════════════════════════════════ */
-function toast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
-}
-</script>
-</body>
-</html>
+    async function loadServices() {
+        if (!currentBusiness) return;
+        const { data, error } = await supabase
+            .from('services')
+            .select('*')
+            .eq('business_id', currentBusiness.id)
+            .eq('is_active', true);
+        if (!error) services = data || [];
+        return services;
+    }
+
+    function renderToday() {
+        const today = new Date(); today.setHours(0,0,0,0);
+        const todayApps = appointments.filter(a => new Date(a.start_time) >= today);
+        if (!todayApps.length) return `<div class="empty">📭 אין תורים להיום</div>`;
+        return todayApps.map(a => `
+            <div class="appointment-item">
+                <div class="appointment-info">
+                    <div class="name">${a.customer_name||'לקוח'} - ${a.service_name||'שירות'}</div>
+                    <div class="details">📞 ${a.customer_phone||''} | 🕐 ${formatTime(a.start_time)}</div>
+                </div>
+                <div>
+                    <span class="status ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
+                    ${a.status !== 'cancelled' ? `<button class="btn btn-danger" onclick="cancelAppointment('${a.id}')">❌ בטל</button>` : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderAll() {
+        if (!appointments.length) return `<div class="empty">📭 אין תורים</div>`;
+        return appointments.map(a => `
+            <div class="appointment-item">
+                <div class="appointment-info">
+                    <div class="name">${a.customer_name||'לקוח'} - ${a.service_name||'שירות'}</div>
+                    <div class="details">📅 ${formatDate(a.start_time)} | 🕐 ${formatTime(a.start_time)} | 📞 ${a.customer_phone||''}</div>
+                </div>
+                <div>
+                    <span class="status ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
+                    ${a.status !== 'cancelled' ? `<button class="btn btn-danger" onclick="cancelAppointment('${a.id}')">❌ בטל</button>` : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderAddAppointment() {
+        const serviceOptions = services.map(s => `<option value="${s.id}">${s.name} (${s.duration_minutes}דק', ${s.price}₪)</option>`).join('');
+        return `
+            <h3>➕ תור חדש</h3>
+            <form id="addForm">
+                <div class="form-group"><label>שם לקוח *</label><input type="text" id="cName" required></div>
+                <div class="form-group"><label>טלפון *</label><input type="tel" id="cPhone" required></div>
+                <div class="form-group"><label>שירות *</label><select id="sId" required><option value="">בחר...</option>${serviceOptions}</select></div>
+                <div class="form-row">
+                    <div class="form-group"><label>תאריך *</label><input type="date" id="aDate" required></div>
+                    <div class="form-group"><label>שעה *</label><input type="time" id="aTime" required></div>
+                </div>
+                <button type="submit" class="btn" style="width:100%;padding:12px;font-size:16px">💾 שמור תור</button>
+            </form>
+        `;
+    }
+
+    function renderServices() {
+        if (!services.length) {
+            return `<div class="empty">✂️ אין שירותים</div><button class="btn" onclick="showAddService()">➕ הוסף שירות</button>`;
+        }
+        return `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px">
+                <h3>✂️ השירותים שלי</h3>
+                <button class="btn btn-success" onclick="showAddService()">➕ הוסף שירות</button>
+            </div>
+            ${services.map(s => `
+                <div class="service-item">
+                    <div><strong>${s.name}</strong> <span style="color:#666;margin-right:10px">${s.duration_minutes} דקות</span> <span style="color:#667eea;font-weight:bold">${s.price}₪</span></div>
+                    <button class="btn btn-danger" onclick="deleteService('${s.id}')">🗑️</button>
+                </div>
+            `).join('')}
+        `;
+    }
+
+    window.switchTab = function(tab) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab')[['today','all','add','services'].indexOf(tab)].classList.add('active');
+        const container = document.getElementById('tabContent');
+        switch(tab) {
+            case 'today': container.innerHTML = renderToday(); break;
+            case 'all': container.innerHTML = renderAll(); break;
+            case 'add': container.innerHTML = renderAddAppointment(); break;
+            case 'services': container.innerHTML = renderServices(); break;
+        }
+        if (tab === 'add') document.getElementById('addForm')?.addEventListener('submit', handleAddAppointment);
+    };
+
+    async function handleAddAppointment(e) {
+        e.preventDefault();
+        const name = document.getElementById('cName').value.trim();
+        const phone = document.getElementById('cPhone').value.trim();
+        const serviceId = document.getElementById('sId').value;
+        const date = document.getElementById('aDate').value;
+        const time = document.getElementById('aTime').value;
+        if (!name||!phone||!serviceId||!date||!time) { alert('❌ יש למלא הכל'); return; }
+        const service = services.find(s => s.id === serviceId);
+        if (!service) { alert('❌ שירות לא נמצא'); return; }
+        const start = new Date(`${date}T${time}:00`);
+        const end = new Date(start.getTime() + service.duration
