@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>התחברות - MyCut</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,sans-serif;background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+        .auth-card{background:#fff;border-radius:24px;padding:48px 40px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.12)}
+        .logo{text-align:center;margin-bottom:32px}
+        .logo h1{font-size:36px;color:#1a202c;margin-bottom:4px}
+        .logo .subtitle{color:#718096;font-size:15px}
+        .form-group{margin-bottom:18px}
+        .form-group label{display:block;font-weight:600;color:#2d3748;margin-bottom:6px;font-size:14px}
+        .form-group input{width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:12px;font-size:16px;transition:border-color .2s;box-sizing:border-box}
+        .form-group input:focus{border-color:#4299e1;outline:none;box-shadow:0 0 0 3px rgba(66,153,225,0.15)}
+        .form-group input.error{border-color:#fc8181}
+        .error-msg{color:#fc8181;font-size:13px;margin-top:4px;display:none}
+        .error-msg.show{display:block}
+        .btn-primary{width:100%;padding:14px;background:#4299e1;color:#fff;border:none;border-radius:12px;font-size:18px;font-weight:600;cursor:pointer;transition:all .2s}
+        .btn-primary:hover{background:#3182ce;transform:translateY(-2px);box-shadow:0 4px 12px rgba(66,153,225,0.3)}
+        .btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+        .auth-footer{text-align:center;margin-top:24px;color:#718096;font-size:14px}
+        .auth-footer a{color:#4299e1;text-decoration:none;font-weight:600}
+        .auth-footer a:hover{text-decoration:underline}
+        .alert{padding:12px 16px;border-radius:10px;margin-bottom:16px;display:none}
+        .alert.show{display:block}
+        .alert-error{background:#fff5f5;color:#c53030;border:1px solid #feb2b2}
+        .alert-success{background:#f0fff4;color:#276749;border:1px solid #9ae6b4}
+        .forgot-password{text-align:left;margin:-6px 0 16px 0}
+        .forgot-password a{color:#718096;font-size:14px;text-decoration:none}
+        .forgot-password a:hover{color:#4299e1;text-decoration:underline}
+        .spinner{display:inline-block;width:20px;height:20px;border:3px solid rgba(255,255,255,0.3);border-radius:50%;border-top-color:#fff;animation:spin .8s ease-in-out infinite;vertical-align:middle;margin-left:8px}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .password-toggle{position:relative}
+        .password-toggle .toggle-btn{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:0 0;border:none;cursor:pointer;color:#a0aec0;font-size:20px;padding:0}
+        .password-toggle .toggle-btn:hover{color:#718096}
+    </style>
+</head>
+<body>
+<div class="auth-card">
+    <div class="logo">
+        <h1>✂️ MyCut</h1>
+        <div class="subtitle">מערכת ניהול תורים לעסק שלך</div>
+    </div>
+    <div id="alert" class="alert"></div>
+    <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+            <label for="email">אימייל</label>
+            <input type="email" id="email" placeholder="הכנס את כתובת האימייל שלך" required autocomplete="email" />
+            <div id="emailError" class="error-msg"></div>
+        </div>
+        <div class="form-group">
+            <label for="password">סיסמה</label>
+            <div class="password-toggle">
+                <input type="password" id="password" placeholder="הכנס את הסיסמה שלך" required autocomplete="current-password" />
+                <button type="button" class="toggle-btn" onclick="togglePassword()">👁️</button>
+            </div>
+            <div id="passwordError" class="error-msg"></div>
+        </div>
+        <div class="forgot-password">
+            <a href="#" onclick="forgotPassword(event)">שכחת סיסמה?</a>
+        </div>
+        <button type="submit" class="btn-primary" id="loginBtn">התחבר</button>
+    </form>
+    <div class="auth-footer">
+        אין לך חשבון? <a href="register.html">הרשם עכשיו</a>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const SUPABASE_URL = 'https://bcbnvtszkfjhfujnxldm.supabase.co';
+    const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';
+    const supabase = supabaseClient.createClient(SUPABASE_URL, SUPABASE_ANON);
+    let loginAttempts = 0;
+    const MAX_ATTEMPTS = 5;
+
+    function showAlert(message, type = 'error') {
+        const alert = document.getElementById('alert');
+        alert.textContent = message;
+        alert.className = `alert alert-${type} show`;
+    }
+    function hideAlert() { document.getElementById('alert').className = 'alert'; }
+    function showFieldError(fieldId, message) {
+        const errorEl = document.getElementById(fieldId + 'Error');
+        const input = document.getElementById(fieldId);
+        errorEl.textContent = message;
+        errorEl.className = 'error-msg show';
+        input.className = 'error';
+    }
+    function clearFieldErrors() {
+        document.querySelectorAll('.error-msg').forEach(el => el.className = 'error-msg');
+        document.querySelectorAll('.form-group input').forEach(el => el.className = '');
+    }
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const btn = document.querySelector('.toggle-btn');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            btn.textContent = '🙈';
+        } else {
+            passwordInput.type = 'password';
+            btn.textContent = '👁️';
+        }
+    }
+    async function forgotPassword(event) {
+        event.preventDefault();
+        const email = document.getElementById('email').value.trim();
+        if (!email) {
+            showAlert('אנא הכנס את כתובת האימייל שלך', 'error');
+            document.getElementById('email').focus();
+            return;
+        }
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + '/reset-password.html'
+            });
+            if (error) throw error;
+            showAlert('📧 קישור לאיפוס סיסמה נשלח לאימייל שלך. בדוק את תיבת הדואר שלך.', 'success');
+        } catch (error) {
+            showAlert('שגיאה בשליחת קישור איפוס: ' + error.message, 'error');
+        }
+    }
+    async function handleLogin(event) {
+        event.preventDefault();
+        hideAlert();
+        clearFieldErrors();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const loginBtn = document.getElementById('loginBtn');
+        let hasError = false;
+        if (!email) {
+            showFieldError('email', 'יש להכניס כתובת אימייל');
+            hasError = true;
+        } else if (!email.includes('@') || !email.includes('.')) {
+            showFieldError('email', 'כתובת אימייל לא תקינה');
+            hasError = true;
+        }
+        if (!password) {
+            showFieldError('password', 'יש להכניס סיסמה');
+            hasError = true;
+        } else if (password.length < 6) {
+            showFieldError('password', 'הסיסמה חייבת להכיל לפחות 6 תווים');
+            hasError = true;
+        }
+        if (hasError) return;
+        if (loginAttempts >= MAX_ATTEMPTS) {
+            showAlert('ניסיונות התחברות רבים מדי. נסה שוב בעוד 5 דקות.', 'error');
+            return;
+        }
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = 'מתחבר <span class="spinner"></span>';
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+            if (error) {
+                loginAttempts++;
+                if (error.message.includes('Invalid login credentials')) {
+                    showAlert('❌ אימייל או סיסמה שגויים. נסה שוב.', 'error');
+                    document.getElementById('password').value = '';
+                    document.getElementById('password').focus();
+                } else {
+                    showAlert('❌ שגיאה: ' + error.message, 'error');
+                }
+                return;
+            }
+            loginAttempts = 0;
+            localStorage.setItem('user', JSON.stringify(data.user));
+            const { data: userData, error: userError } = await supabase
+                .from('users')
+                .select('business_id')
+                .eq('id', data.user.id)
+                .single();
+            if (userError) {
+                await supabase.auth.signOut();
+                showAlert('❌ המשתמש לא נמצא במערכת. אנא צור קשר עם התמיכה.', 'error');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = 'התחבר';
+                return;
+            }
+            if (userData?.business_id) {
+                const { data: business } = await supabase
+                    .from('businesses')
+                    .select('*')
+                    .eq('id', userData.business_id)
+                    .single();
+                if (business) {
+                    localStorage.setItem('business', JSON.stringify(business));
+                }
+            }
+            showAlert('✅ התחברת בהצלחה! מעביר לדשבורד...', 'success');
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 1000);
+        } catch (error) {
+            showAlert('❌ שגיאה: ' + error.message, 'error');
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = 'התחבר';
+        }
+    }
+    async function checkExistingSession() {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                window.location.href = 'dashboard.html';
+            }
+        } catch (error) {
+            console.log('לא מחובר');
+        }
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        checkExistingSession();
+        document.getElementById('password').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        });
+        document.querySelectorAll('.form-group input').forEach(input => {
+            input.addEventListener('input', () => {
+                const errorEl = document.getElementById(input.id + 'Error');
+                if (errorEl) {
+                    errorEl.className = 'error-msg';
+                    input.className = '';
+                }
+                hideAlert();
+            });
+        });
+    });
+</script>
+</body>
+</html>
