@@ -1,212 +1,139 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>הרשמה - MyCut</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Segoe UI',system-ui,sans-serif;background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-        .auth-card{background:#fff;border-radius:24px;padding:48px 40px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.12)}
-        .logo{text-align:center;margin-bottom:32px}
-        .logo h1{font-size:36px;color:#1a202c;margin-bottom:4px}
-        .logo .subtitle{color:#718096;font-size:15px}
-        .form-group{margin-bottom:16px}
-        .form-group label{display:block;font-weight:600;color:#2d3748;margin-bottom:4px;font-size:14px}
-        .form-group label .required{color:#fc8181}
-        .form-group input{width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:12px;font-size:16px;transition:border-color .2s;box-sizing:border-box}
-        .form-group input:focus{border-color:#4299e1;outline:none;box-shadow:0 0 0 3px rgba(66,153,225,0.15)}
-        .form-group input.error{border-color:#fc8181}
-        .form-group textarea{width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:12px;font-size:16px;transition:border-color .2s;box-sizing:border-box;font-family:inherit;resize:vertical;min-height:60px}
-        .form-group textarea:focus{border-color:#4299e1;outline:none;box-shadow:0 0 0 3px rgba(66,153,225,0.15)}
-        .form-group textarea.error{border-color:#fc8181}
-        .error-msg{color:#fc8181;font-size:13px;margin-top:4px;display:none}
-        .error-msg.show{display:block}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-        @media (max-width:480px){.form-row{grid-template-columns:1fr}}
-        .btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,#4299e1,#3182ce);color:#fff;border:none;border-radius:12px;font-size:18px;font-weight:600;cursor:pointer;transition:all .2s}
-        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(66,153,225,0.3)}
-        .btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
-        .auth-footer{text-align:center;margin-top:24px;color:#718096;font-size:14px}
-        .auth-footer a{color:#4299e1;text-decoration:none;font-weight:600}
-        .auth-footer a:hover{text-decoration:underline}
-        .alert{padding:12px 16px;border-radius:10px;margin-bottom:16px;display:none}
+        body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+        .card{background:white;border-radius:20px;padding:40px;width:100%;max-width:450px;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+        h1{text-align:center;color:#333;margin-bottom:5px}
+        .subtitle{text-align:center;color:#666;margin-bottom:30px}
+        .form-group{margin-bottom:15px}
+        .form-group label{display:block;font-weight:bold;margin-bottom:5px;color:#333}
+        .form-group input{width:100%;padding:12px;border:2px solid #ddd;border-radius:10px;font-size:16px;box-sizing:border-box}
+        .form-group input:focus{border-color:#667eea;outline:none}
+        .btn{width:100%;padding:14px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:10px;font-size:18px;font-weight:bold;cursor:pointer}
+        .btn:hover{transform:translateY(-2px);box-shadow:0 5px 20px rgba(102,126,234,0.4)}
+        .btn:disabled{opacity:0.6;cursor:not-allowed}
+        .alert{padding:12px;border-radius:10px;margin-bottom:15px;display:none;text-align:center}
+        .alert-error{background:#fee;color:#c33;border:1px solid #fcc}
+        .alert-success{background:#efe;color:#3c3;border:1px solid #cfc}
         .alert.show{display:block}
-        .alert-error{background:#fff5f5;color:#c53030;border:1px solid #feb2b2}
-        .alert-success{background:#f0fff4;color:#276749;border:1px solid #9ae6b4}
-        .spinner{display:inline-block;width:20px;height:20px;border:3px solid rgba(255,255,255,0.3);border-radius:50%;border-top-color:#fff;animation:spin .8s ease-in-out infinite;vertical-align:middle;margin-left:8px}
+        .footer{text-align:center;margin-top:20px;color:#666}
+        .footer a{color:#667eea;text-decoration:none;font-weight:bold}
+        .spinner{display:inline-block;width:20px;height:20px;border:3px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:10px}
         @keyframes spin{to{transform:rotate(360deg)}}
-        .terms{display:flex;align-items:center;gap:8px;font-size:14px;color:#718096;margin:12px 0 16px}
-        .terms input[type="checkbox"]{width:18px;height:18px;cursor:pointer}
-        .terms a{color:#4299e1;text-decoration:none}
-        .terms a:hover{text-decoration:underline}
-        .password-strength{height:4px;margin-top:6px;border-radius:4px;background:#e2e8f0;transition:all .3s}
-        .password-strength .bar{height:100%;border-radius:4px;transition:all .3s;width:0%}
-        hr{border:none;border-top:2px dashed #e2e8f0;margin:20px 0}
     </style>
 </head>
 <body>
-<div class="auth-card">
-    <div class="logo">
-        <h1>✂️ MyCut</h1>
-        <div class="subtitle">הקמת עסק חדש - התחל לקבוע תורים</div>
-    </div>
+<div class="card">
+    <h1>✂️ MyCut</h1>
+    <div class="subtitle">הקמת עסק חדש</div>
+    
     <div id="alert" class="alert"></div>
-    <form id="registerForm" onsubmit="handleRegister(event)">
+    
+    <form id="registerForm">
         <div class="form-group">
-            <label for="businessName">שם העסק <span class="required">*</span></label>
-            <input type="text" id="businessName" placeholder="למשל: מספרה אופיר" required />
-            <div id="businessNameError" class="error-msg"></div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label for="ownerName">שם בעל העסק <span class="required">*</span></label>
-                <input type="text" id="ownerName" placeholder="שם מלא" required />
-                <div id="ownerNameError" class="error-msg"></div>
-            </div>
-            <div class="form-group">
-                <label for="phone">טלפון <span class="required">*</span></label>
-                <input type="tel" id="phone" placeholder="050-1234567" required />
-                <div id="phoneError" class="error-msg"></div>
-            </div>
+            <label>שם העסק *</label>
+            <input type="text" id="businessName" placeholder="למשל: מספרה אופיר" required>
         </div>
         <div class="form-group">
-            <label for="address">כתובת</label>
-            <input type="text" id="address" placeholder="כתובת העסק (אופציונלי)" />
-        </div>
-        <hr />
-        <div class="form-group">
-            <label for="email">אימייל <span class="required">*</span></label>
-            <input type="email" id="email" placeholder="הכנס את כתובת האימייל שלך" required autocomplete="email" />
-            <div id="emailError" class="error-msg"></div>
+            <label>שם בעל העסק *</label>
+            <input type="text" id="ownerName" placeholder="שם מלא" required>
         </div>
         <div class="form-group">
-            <label for="password">סיסמה <span class="required">*</span></label>
-            <input type="password" id="password" placeholder="לפחות 6 תווים" required autocomplete="new-password" oninput="updatePasswordStrength(this.value)" />
-            <div class="password-strength"><div class="bar" id="passwordStrengthBar"></div></div>
-            <div id="passwordError" class="error-msg"></div>
+            <label>טלפון *</label>
+            <input type="tel" id="phone" placeholder="050-1234567" required>
         </div>
         <div class="form-group">
-            <label for="confirmPassword">אימות סיסמה <span class="required">*</span></label>
-            <input type="password" id="confirmPassword" placeholder="הכנס את הסיסמה שוב" required autocomplete="new-password" />
-            <div id="confirmPasswordError" class="error-msg"></div>
+            <label>אימייל *</label>
+            <input type="email" id="email" placeholder="הכנס אימייל" required>
         </div>
-        <div class="terms">
-            <input type="checkbox" id="terms" required />
-            <label for="terms">אני מאשר את <a href="#" onclick="alert('תנאי השימוש יופיעו כאן'); return false;">תנאי השימוש</a> ואת <a href="#" onclick="alert('מדיניות הפרטיות תופיע כאן'); return false;">מדיניות הפרטיות</a></label>
+        <div class="form-group">
+            <label>סיסמה *</label>
+            <input type="password" id="password" placeholder="לפחות 6 תווים" required>
         </div>
-        <button type="submit" class="btn-primary" id="registerBtn">הרשם עכשיו 🚀</button>
+        <div class="form-group">
+            <label>אימות סיסמה *</label>
+            <input type="password" id="confirmPassword" placeholder="הכנס שוב" required>
+        </div>
+        
+        <button type="submit" class="btn" id="registerBtn">🚀 הרשם עכשיו</button>
     </form>
-    <div class="auth-footer">כבר יש לך חשבון? <a href="login.html">התחבר</a></div>
+    
+    <div class="footer">
+        כבר יש לך חשבון? <a href="login.html">התחבר</a>
+    </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
     const SUPABASE_URL = 'https://bcbnvtszkfjhfujnxldm.supabase.co';
     const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';
-    const supabase = supabaseClient.createClient(SUPABASE_URL, SUPABASE_ANON);
+    const supabase = window.supabaseClient.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-    function showAlert(message, type = 'error') {
-        const alert = document.getElementById('alert');
-        alert.textContent = message;
-        alert.className = `alert alert-${type} show`;
+    const alertEl = document.getElementById('alert');
+    const registerBtn = document.getElementById('registerBtn');
+
+    function showAlert(msg, type = 'error') {
+        alertEl.textContent = msg;
+        alertEl.className = `alert alert-${type} show`;
     }
-    function hideAlert() { document.getElementById('alert').className = 'alert'; }
-    function showFieldError(fieldId, message) {
-        const errorEl = document.getElementById(fieldId + 'Error');
-        const input = document.getElementById(fieldId);
-        errorEl.textContent = message;
-        errorEl.className = 'error-msg show';
-        input.className = 'error';
-    }
-    function clearFieldErrors() {
-        document.querySelectorAll('.error-msg').forEach(el => el.className = 'error-msg');
-        document.querySelectorAll('.form-group input, .form-group textarea').forEach(el => el.className = '');
-    }
-    function updatePasswordStrength(password) {
-        const bar = document.getElementById('passwordStrengthBar');
-        let strength = 0;
-        if (password.length >= 6) strength += 20;
-        if (password.length >= 10) strength += 20;
-        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 20;
-        if (/\d/.test(password)) strength += 20;
-        if (/[^a-zA-Z0-9]/.test(password)) strength += 20;
-        bar.style.width = strength + '%';
-        if (strength < 40) bar.style.background = '#fc8181';
-        else if (strength < 70) bar.style.background = '#f6ad55';
-        else bar.style.background = '#68d391';
-    }
-    async function handleRegister(event) {
-        event.preventDefault();
-        hideAlert();
-        clearFieldErrors();
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        alertEl.className = 'alert';
+        
         const businessName = document.getElementById('businessName').value.trim();
         const ownerName = document.getElementById('ownerName').value.trim();
         const phone = document.getElementById('phone').value.trim();
-        const address = document.getElementById('address').value.trim();
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
-        const terms = document.getElementById('terms').checked;
-        const registerBtn = document.getElementById('registerBtn');
-        let hasError = false;
-        if (!businessName) { showFieldError('businessName', 'יש להכניס שם עסק'); hasError = true; }
-        else if (businessName.length < 2) { showFieldError('businessName', 'שם העסק קצר מדי'); hasError = true; }
-        if (!ownerName) { showFieldError('ownerName', 'יש להכניס שם בעל העסק'); hasError = true; }
-        if (!phone) { showFieldError('phone', 'יש להכניס מספר טלפון'); hasError = true; }
-        else if (!/^[0-9\-+]{9,15}$/.test(phone.replace(/-/g, ''))) { showFieldError('phone', 'מספר טלפון לא תקין'); hasError = true; }
-        if (!email) { showFieldError('email', 'יש להכניס כתובת אימייל'); hasError = true; }
-        else if (!email.includes('@') || !email.includes('.')) { showFieldError('email', 'כתובת אימייל לא תקינה'); hasError = true; }
-        if (!password) { showFieldError('password', 'יש להכניס סיסמה'); hasError = true; }
-        else if (password.length < 6) { showFieldError('password', 'הסיסמה חייבת להכיל לפחות 6 תווים'); hasError = true; }
-        if (!confirmPassword) { showFieldError('confirmPassword', 'יש להכניס את הסיסמה שוב'); hasError = true; }
-        else if (password !== confirmPassword) { showFieldError('confirmPassword', 'הסיסמאות אינן תואמות'); hasError = true; }
-        if (!terms) { showAlert('יש לאשר את תנאי השימוש', 'error'); hasError = true; }
-        if (hasError) {
-            const firstError = document.querySelector('.error');
-            if (firstError) { firstError.focus(); firstError.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+
+        if (!businessName || !ownerName || !phone || !email || !password) {
+            showAlert('❌ יש למלא את כל השדות', 'error');
             return;
         }
+        if (password !== confirmPassword) {
+            showAlert('❌ הסיסמאות אינן תואמות', 'error');
+            return;
+        }
+        if (password.length < 6) {
+            showAlert('❌ הסיסמה חייבת להיות לפחות 6 תווים', 'error');
+            return;
+        }
+
         registerBtn.disabled = true;
-        registerBtn.innerHTML = 'יוצר חשבון <span class="spinner"></span>';
+        registerBtn.innerHTML = 'יוצר חשבון...';
+
         try {
+            // 1. הרשמה
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: email,
                 password: password
             });
-            if (authError) {
-                if (authError.message.includes('already registered')) {
-                    showAlert('❌ אימייל זה כבר רשום. נסה להתחבר.', 'error');
-                } else {
-                    showAlert('❌ שגיאה: ' + authError.message, 'error');
-                }
-                registerBtn.disabled = false;
-                registerBtn.innerHTML = 'הרשם עכשיו 🚀';
-                return;
-            }
-            if (!authData.user) {
-                showAlert('❌ שגיאה ביצירת המשתמש. נסה שוב.', 'error');
-                registerBtn.disabled = false;
-                registerBtn.innerHTML = 'הרשם עכשיו 🚀';
-                return;
-            }
+
+            if (authError) throw new Error('שגיאת אימות: ' + authError.message);
+            if (!authData.user) throw new Error('לא נוצר משתמש');
+
+            // 2. יצירת עסק
             const { data: business, error: bizError } = await supabase
                 .from('businesses')
                 .insert([{
                     name: businessName,
                     owner_name: ownerName,
                     email: email,
-                    phone: phone,
-                    address: address || null
+                    phone: phone
                 }])
                 .select()
                 .single();
-            if (bizError) {
-                await supabase.auth.signOut();
-                showAlert('❌ שגיאה ביצירת העסק: ' + bizError.message, 'error');
-                registerBtn.disabled = false;
-                registerBtn.innerHTML = 'הרשם עכשיו 🚀';
-                return;
-            }
+
+            if (bizError) throw new Error('שגיאה ביצירת העסק: ' + bizError.message);
+
+            // 3. קישור משתמש לעסק
             const { error: userError } = await supabase
                 .from('users')
                 .insert([{
@@ -216,46 +143,25 @@
                     full_name: ownerName,
                     role: 'owner'
                 }]);
+
             if (userError) {
                 await supabase.from('businesses').delete().eq('id', business.id);
-                await supabase.auth.signOut();
-                showAlert('❌ שגיאה בקישור המשתמש לעסק: ' + userError.message, 'error');
-                registerBtn.disabled = false;
-                registerBtn.innerHTML = 'הרשם עכשיו 🚀';
-                return;
+                throw new Error('שגיאה בקישור המשתמש: ' + userError.message);
             }
+
             localStorage.setItem('user', JSON.stringify(authData.user));
             localStorage.setItem('business', JSON.stringify(business));
-            showAlert('✅ העסק נוצר בהצלחה! מעביר לדשבורד...', 'success');
+
+            showAlert('🎉 העסק נוצר בהצלחה!', 'success');
             setTimeout(() => {
                 window.location.href = 'dashboard.html';
             }, 1500);
+
         } catch (error) {
-            showAlert('❌ שגיאה: ' + error.message, 'error');
+            showAlert('❌ ' + error.message, 'error');
             registerBtn.disabled = false;
-            registerBtn.innerHTML = 'הרשם עכשיו 🚀';
+            registerBtn.innerHTML = '🚀 הרשם עכשיו';
         }
-    }
-    async function checkExistingSession() {
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                window.location.href = 'dashboard.html';
-            }
-        } catch (error) { console.log('לא מחובר'); }
-    }
-    document.addEventListener('DOMContentLoaded', () => {
-        checkExistingSession();
-        document.querySelectorAll('.form-group input').forEach(input => {
-            input.addEventListener('input', () => {
-                const errorEl = document.getElementById(input.id + 'Error');
-                if (errorEl) {
-                    errorEl.className = 'error-msg';
-                    input.className = '';
-                }
-                hideAlert();
-            });
-        });
     });
 </script>
 </body>
