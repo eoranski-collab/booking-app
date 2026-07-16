@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>MyCut - ניהול</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Arial;background:#0f0c29;color:#fff;direction:rtl;padding:20px}
+        .card{background:rgba(255,255,255,0.05);border-radius:16px;padding:20px;margin-bottom:16px}
+        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+        .stat{background:rgba(255,255,255,0.05);padding:16px;border-radius:12px;text-align:center}
+        .stat .num{font-size:28px;font-weight:bold;color:#f5576c}
+        .btn{background:#f5576c;border:none;color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;margin:4px}
+        .tab{background:rgba(255,255,255,0.05);border:none;color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;margin:4px}
+        .tab.active{background:#f5576c}
+        input,select{width:100%;padding:10px;border-radius:8px;border:none;margin:4px 0}
+        .item{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid rgba(255,255,255,0.05)}
+        .hidden{display:none}
+        .error{color:#f5576c;text-align:center;padding:40px}
+    </style>
+</head>
+<body>
+
+<h1>✂️ MyCut</h1>
+<div id="businessDisplay" style="color:#aaa;margin-bottom:20px;">טוען...</div>
+
+<div class="stats">
+    <div class="stat"><div class="num" id="todayCount">0</div><div>📅 תורים היום</div></div>
+    <div class="stat"><div class="num" id="pendingCount">0</div><div>⏳ ממתינים</div></div>
+    <div class="stat"><div class="num" id="customersCount">0</div><div>👤 לקוחות</div></div>
+    <div class="stat"><div class="num" id="servicesCount">0</div><div>✂️ שירותים</div></div>
+</div>
+
+<div>
+    <button class="tab active" onclick="showTab('today')">📅 היום</button>
+    <button class="tab" onclick="showTab('all')">📋 כל התורים</button>
+    <button class="tab" onclick="showTab('add')">➕ תור חדש</button>
+    <button class="tab" onclick="showTab('services')">✂️ שירותים</button>
+    <button class="btn" onclick="logout()" style="background:#333;float:left">התנתק</button>
+</div>
+
+<div class="card" id="tabContent">
+    <div style="text-align:center;padding:40px;">⏳ טוען...</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // ================================================
+    // הגדרות
+    // ================================================
+    const SUPABASE_URL = 'https://bcbnvtszkfjhfujnxldm.supabase.co';
+    const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    let BUSINESS_ID = null;
+    let appointments = [];
+    let services = [];
+
+    // ================================================
+    // התחברות ושליפת עסק
+    // ================================================
+    async function init() {
+        try {
+            // בדיקת משתמש
+            const { data: { user }, error: userError } = await sb.auth.getUser();
+            if (userError || !user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            console.log('✅ משתמש:', user.email);
+
+            // שליפת העסק - דרך 3 אפשרויות
+            let bid = null;
+
+            // אפשרות 1: מתוך users
+            const { data: userData } = await sb
+                .from('users')
+                .select('business_id')
+                .eq('id', user.id)
+                .maybeSingle();
+
+            if (userData?.business_id) {
+                bid = userData.business_id;
+                console.log('✅ עסק נמצא דרך users');
+            }
+
+            // אפשרות 2: לפי אימייל
+            if (!bid) {
+                const { data: bizData } = await sb
+                    .from('businesses')
+                    .select('id')
+                    .eq('email', user.email)
+                    .maybeSingle();
+
+                if (bizData) {
+                    bid = bizData.id;
+                    console.log('✅ עסק נמצא דרך אימייל');
+                    
+                    // עדכון users
+                    await sb
+                        .from('users')
+                        .update({ business_id: bid })
+                        .eq('id', user.id);
+                }
+            }
+
+            // אפשרות 3: שליפת כל העסקים (אם אין ברירה)
+            if (!bid) {
+                const { data: allBiz } = await sb
+                    .from('businesses')
+                    .select('id, name')
+                    .limit(1);
+
+                if (allBiz && allBiz.length > 0) {
+                    bid = allBiz[0].id;
+                    console.log('✅ עסק ראשון נמצא:', allBiz[0].name);
+                }
+            }
+
+            if (!bid) {
+                document.getElementById('businessDisplay').innerHTML = '❌ לא נמצא עסק';
+                document.getElementById('tabContent').innerHTML = `
+                    <div class="error">
+                        <h2>❌ לא נמצא עסק</h2>
+                        <p>אין עסק מקושר למשתמש זה.</p>
+                        <button class="btn" onclick="window.location.href='register.html'">הרשם עסק חדש</button>
+                    </div>
+                `;
+                return;
+            }
+
+            BUSINESS_ID = bid;
+
+            // שליפת פרטי העסק
+            const { data: business } = await sb
+                .from('businesses')
+                .select('name')
+                .eq('id', bid)
+                .maybeSingle();
+
+            document.getElementById('businessDisplay').textContent = '🏢 ' + (business?.name || 'עסק');
+
+            // טעינת נתונים
+            await loadData();
+            showTab('today');
+
+        } catch (error) {
+            console.error('❌ שגיאה:', error);
+            document.getElementById('tabContent').innerHTML = `<div class="error">❌ שגיאה: ${error.message}</div>`;
+        }
+    }
+
+    // ================================================
+    // טעינת נתונים
+    // ================================================
+    async function loadData() {
+        if (!BUSINESS_ID) return;
+
+        // תורים
+        const { data: apps } = await sb
+            .from('appointments')
+            .select('*')
+            .eq('business_id', BUSINESS_ID)
+            .order('start_time', { ascending: true });
+
+        appointments = apps || [];
+
+        // שירותים
+        const { data: servs } = await sb
+            .from('services')
+            .select('*')
+            .eq('business_id', BUSINESS_ID)
+            .eq('is_active', true);
+
+        services = servs || [];
+
+        // עדכון סטטיסטיקות
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayApps = appointments.filter(a => new Date(a.start_time) >= today);
+        const pending = appointments.filter(a => a.status === 'pending');
+
+        document.getElementById('todayCount').textContent = todayApps.length;
+        document.getElementById('pendingCount').textContent = pending.length;
+        document.getElementById('customersCount').textContent = appointments.filter(a => a.customer_name).length;
+        document.getElementById('servicesCount').textContent = services.length;
+
+        console.log('📊 נטען:', appointments.length, 'תורים,', services.length, 'שירותים');
+    }
+
+    // ================================================
+    // תצוגת טאבים
+    // ================================================
+    function showTab(tab) {
+        // עדכון כפתורים
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        const tabMap = { 'today': 0, 'all': 1, 'add': 2, 'services': 3 };
+        if (tabMap[tab] !== undefined) {
+            document.querySelectorAll('.tab')[tabMap[tab]].classList.add('active');
+        }
+
+        const container = document.getElementById('tabContent');
+
+        if (tab === 'today') {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const items = appointments.filter(a => new Date(a.start_time) >= today);
+            container.innerHTML = items.length ? items.map(a => `
+                <div class="item">
+                    <div>
+                        <strong>${a.customer_name || 'לקוח'}</strong> - ${a.service_name || 'שירות'}<br>
+                        <small>${new Date(a.start_time).toLocaleString('he-IL')}</small>
+                    </div>
+                    <div>
+                        <span style="background:rgba(72,187,120,0.2);padding:4px 12px;border-radius:20px;font-size:12px;">${a.status}</span>
+                        ${a.status !== 'cancelled' ? `<button class="btn" style="padding:4px 12px;font-size:12px;background:#e53e3e;" onclick="cancelApp('${a.id}')">בטל</button>` : ''}
+                    </div>
+                </div>
+            `).join('') : '<div style="text-align:center;padding:40px;">📭 אין תורים להיום</div>';
+        } else if (tab === 'all') {
+            container.innerHTML = appointments.length ? appointments.map(a => `
+                <div class="item">
+                    <div>
+                        <strong>${a.customer_name || 'לקוח'}</strong> - ${a.service_name || 'שירות'}<br>
+                        <small>${new Date(a.start_time).toLocaleString('he-IL')}</small>
+                    </div>
+                    <div>
+                        <span style="background:rgba(72,187,120,0.2);padding:4px 12px;border-radius:20px;font-size:12px;">${a.status}</span>
+                        ${a.status !== 'cancelled' ? `<button class="btn" style="padding:4px 12px;font-size:12px;background:#e53e3e;" onclick="cancelApp('${a.id}')">בטל</button>` : ''}
+                    </div>
+                </div>
+            `).join('') : '<div style="text-align:center;padding:40px;">📭 אין תורים</div>';
+        } else if (tab === 'add') {
+            container.innerHTML = `
+                <h3>➕ תור חדש</h3>
+                <form onsubmit="addAppointment(event)">
+                    <input type="text" id="cName" placeholder="שם לקוח" required>
+                    <input type="tel" id="cPhone" placeholder="טלפון" required>
+                    <select id="sId" required>
+                        <option value="">בחר שירות...</option>
+                        ${services.map(s => `<option value="${s.id}">${s.name} (${s.duration_minutes}דק, ${s.price}₪)</option>`).join('')}
+                    </select>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                        <input type="date" id="aDate" required>
+                        <input type="time" id="aTime" required>
+                    </div>
+                    <button type="submit" class="btn" style="width:100%;padding:12px;">💾 שמור תור</button>
+                </form>
+            `;
+        } else if (tab === 'services') {
+            container.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <h3>✂️ שירותים</h3>
+                    <button class="btn" onclick="addService()">➕ הוסף</button>
+                </div>
+                ${services.length ? services.map(s => `
+                    <div class="item">
+                        <div><strong>${s.name}</strong> - ${s.duration_minutes}דק, ${s.price}₪</div>
+                        <button class="btn" style="padding:4px 12px;font-size:12px;background:#e53e3e;" onclick="deleteServ('${s.id}')">🗑️</button>
+                    </div>
+                `).join('') : '<div style="text-align:center;padding:40px;">✂️ אין שירותים</div>'}
+            `;
+        }
+    }
+
+    // ================================================
+    // פעולות
+    // ================================================
+    window.addAppointment = async function(e) {
+        e.preventDefault();
+        const name = document.getElementById('cName').value.trim();
+        const phone = document.getElementById('cPhone').value.trim();
+        const serviceId = document.getElementById('sId').value;
+        const date = document.getElementById('aDate').value;
+        const time = document.getElementById('aTime').value;
+
+        if (!name || !phone || !serviceId || !date || !time) {
+            alert('❌ יש למלא הכל');
+            return;
+        }
+
+        const service = services.find(s => s.id === serviceId);
+        if (!service) { alert('❌ שירות לא נמצא'); return; }
+
+        const start = new Date(`${date}T${time}:00`);
+        const end = new Date(start.getTime() + service.duration_minutes * 60000);
+
+        const { error } = await sb.from('appointments').insert([{
+            business_id: BUSINESS_ID,
+            customer_name: name,
+            customer_phone: phone,
+            service_id: serviceId,
+            service_name: service.name,
+            start_time: start.toISOString(),
+            end_time: end.toISOString(),
+            price: service.price,
+            status: 'confirmed'
+        }]);
+
+        if (error) { alert('❌ ' + error.message); return; }
+
+        alert('✅ תור נוצר!');
+        await loadData();
+        showTab('today');
+    };
+
+    window.cancelApp = async function(id) {
+        if (!confirm('לבטל תור?')) return;
+        const { error } = await sb.from('appointments').update({ status: 'cancelled' }).eq('id', id);
+        if (error) { alert('❌ ' + error.message); return; }
+        alert('✅ בוטל!');
+        await loadData();
+        showTab('today');
+    };
+
+    window.addService = async function() {
+        const name = prompt('📝 שם השירות:');
+        if (!name) return;
+        const duration = parseInt(prompt('⏱️ משך (דקות):'));
+        if (!duration) return;
+        const price = parseFloat(prompt('💰 מחיר (ש"ח):'));
+        if (!price) return;
+
+        const { error } = await sb.from('services').insert([{
+            business_id: BUSINESS_ID,
+            name: name,
+            duration_minutes: duration,
+            price: price,
+            is_active: true
+        }]);
+
+        if (error) { alert('❌ ' + error.message); return; }
+        alert('✅ שירות נוסף!');
+        await loadData();
+        showTab('services');
+    };
+
+    window.deleteServ = async function(id) {
+        if (!confirm('למחוק שירות?')) return;
+        const { error } = await sb.from('services').update({ is_active: false }).eq('id', id);
+        if (error) { alert('❌ ' + error.message); return; }
+        alert('✅ נמחק!');
+        await loadData();
+        showTab('services');
+    };
+
+    window.logout = async function() {
+        await sb.auth.signOut();
+        localStorage.clear();
+        window.location.href = 'login.html';
+    };
+
+    // ================================================
+    // הפעלה
+    // ================================================
+    document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
