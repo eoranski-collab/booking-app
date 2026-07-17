@@ -65,7 +65,7 @@
         <div class="logo">✂️ <span>MyCut</span></div>
         <div class="user-area">
             <span>👋 שלום, <span class="name" id="bizName">טוען...</span></span>
-            <button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> התנתק</button>
+            <button class="btn-logout" onclick="logout()"> התנתק</button>
         </div>
     </header>
 
@@ -92,8 +92,8 @@
 
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    </script>
     <script>
         // ============================================
         // קוד פשוט שעובד - מתחבר ישירות לעסק
@@ -111,6 +111,7 @@
         async function checkAuth() {
             const { data: { user }, error } = await sb.auth.getUser();
             if (error || !user) {
+                // אין משתמש - מעבר להתחברות
                 window.location.href = 'login.html';
                 return null;
             }
@@ -130,6 +131,9 @@
             if (userData?.business_id) {
                 BUSINESS_ID = userData.business_id;
                 console.log('✅ עסק נמצא דרך users');
+                // שליפת שם העסק
+                const { data: biz } = await sb.from('businesses').select('name').eq('id', BUSINESS_ID).maybeSingle();
+                if (biz) document.getElementById('bizName').textContent = biz.name;
                 return;
             }
 
@@ -144,7 +148,7 @@
                 BUSINESS_ID = bizData.id;
                 console.log('✅ עסק נמצא דרך אימייל:', bizData.name);
                 document.getElementById('bizName').textContent = bizData.name;
-                
+
                 // עדכן את users
                 await sb.from('users').update({ business_id: BUSINESS_ID }).eq('id', user.id);
                 return;
@@ -166,12 +170,12 @@
             // 4. אין עסק
             document.getElementById('bizName').textContent = '❌ לא נמצא עסק';
             document.getElementById('tabContent').innerHTML = `
-                <div class="empty"><div class="icon">❌</div>
-                <h3>לא נמצא עסק</h3>
-                <p>אין עסק מקושר למשתמש זה.</p>
-                <button class="btn-primary" onclick="window.location.href='register.html'" style="width:auto;padding:10px 24px;margin-top:16px;">📝 הרשם עסק</button>
-                </div>
-            `;
+                    <div class="empty"><div class="icon">❌</div>
+                    <h3>לא נמצא עסק</h3>
+                    <p>אין עסק מקושר למשתמש זה.</p>
+                    <button class="btn-primary" onclick="window.location.href='register.html'" style="width:auto;padding:10px 24px;margin-top:16px;">📝 הרשם עסק</button>
+                    </div>
+                `;
         }
 
         // ===== טעינת נתונים =====
@@ -236,71 +240,72 @@
             const items = appointments.filter(a => new Date(a.start_time) >= today);
             if (!items.length) return `<div class="empty"><div class="icon">📭</div><p>אין תורים להיום</p></div>`;
             return items.map(a => `
-                <div class="item">
-                    <div class="info">
-                        <div class="name">${a.customer_name || 'לקוח'} — ${a.service_name || 'שירות'}</div>
-                        <div class="details">📞 ${a.customer_phone || ''} • 🕐 ${formatTime(a.start_time)}</div>
+                    <div class="item">
+                        <div class="info">
+                            <div class="name">${a.customer_name || 'לקוח'} — ${a.service_name || 'שירות'}</div>
+                            <div class="details">📞 ${a.customer_phone || ''} • 🕐 ${formatTime(a.start_time)}</div>
+                        </div>
+                        <div class="actions">
+                            <span class="badge ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
+                            ${a.status !== 'cancelled' ? `<button class="btn-sm danger" onclick="cancelApp('${a.id}')">❌ בטל</button>` : ''}
+                        </div>
                     </div>
-                    <div class="actions">
-                        <span class="badge ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
-                        ${a.status !== 'cancelled' ? `<button class="btn-sm danger" onclick="cancelApp('${a.id}')">❌ בטל</button>` : ''}
-                    </div>
-                </div>
-            `).join('');
+                `).join('');
         }
 
         function renderAll() {
             if (!appointments.length) return `<div class="empty"><div class="icon">📭</div><p>אין תורים</p></div>`;
             return appointments.map(a => `
-                <div class="item">
-                    <div class="info">
-                        <div class="name">${a.customer_name || 'לקוח'} — ${a.service_name || 'שירות'}</div>
-                        <div class="details">📅 ${formatDate(a.start_time)} • 🕐 ${formatTime(a.start_time)} • 📞 ${a.customer_phone || ''}</div>
+                    <div class="item">
+                        <div class="info">
+                            <div class="name">${a.customer_name || 'לקוח'} — ${a.service_name || 'שירות'}</div>
+                            <div class="details">📅 ${formatDate(a.start_time)} • 🕐 ${formatTime(a.start_time)} • 📞 ${a.customer_phone || ''}</div>
+                        </div>
+                        <div class="actions">
+                            <span class="badge ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
+                            ${a.status !== 'cancelled' ? `<button class="btn-sm danger" onclick="cancelApp('${a.id}')">❌ בטל</button>` : ''}
+                        </div>
                     </div>
-                    <div class="actions">
-                        <span class="badge ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
-                        ${a.status !== 'cancelled' ? `<button class="btn-sm danger" onclick="cancelApp('${a.id}')">❌ בטל</button>` : ''}
-                    </div>
-                </div>
-            `).join('');
+                `).join('');
         }
 
         function renderAdd() {
-            const opts = services.map(s => `<option value="${s.id}">${s.name} (${s.duration_minutes}דק, ${s.price}₪)</option>`).join('');
+            const opts = services.map(s =>
+                `<option value="${s.id}">${s.name} (${s.duration_minutes}דק, ${s.price}₪)</option>`).join('');
             return `
-                <h3>➕ תור חדש</h3>
-                <form onsubmit="addApp(event)">
-                    <div class="form-group"><label>שם לקוח *</label><input type="text" id="cName" required></div>
-                    <div class="form-group"><label>טלפון *</label><input type="tel" id="cPhone" required></div>
-                    <div class="form-group"><label>שירות *</label><select id="sId" required><option value="">בחר...</option>${opts}</select></div>
-                    <div class="form-row">
-                        <div class="form-group"><label>תאריך *</label><input type="date" id="aDate" required></div>
-                        <div class="form-group"><label>שעה *</label><input type="time" id="aTime" required></div>
-                    </div>
-                    <button type="submit" class="btn-primary">💾 שמור תור</button>
-                </form>
-            `;
+                    <h3>➕ תור חדש</h3>
+                    <form onsubmit="addApp(event)">
+                        <div class="form-group"><label>שם לקוח *</label><input type="text" id="cName" required></div>
+                        <div class="form-group"><label>טלפון *</label><input type="tel" id="cPhone" required></div>
+                        <div class="form-group"><label>שירות *</label><select id="sId" required><option value="">בחר...</option>${opts}</select></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>תאריך *</label><input type="date" id="aDate" required></div>
+                            <div class="form-group"><label>שעה *</label><input type="time" id="aTime" required></div>
+                        </div>
+                        <button type="submit" class="btn-primary">💾 שמור תור</button>
+                    </form>
+                `;
         }
 
         function renderServices() {
             if (!services.length) {
                 return `
-                    <div class="empty"><div class="icon">✂️</div><p>אין שירותים</p></div>
-                    <button class="btn-primary" onclick="addService()" style="width:auto;padding:10px 24px;">➕ הוסף שירות</button>
-                `;
+                        <div class="empty"><div class="icon">✂️</div><p>אין שירותים</p></div>
+                        <button class="btn-primary" onclick="addService()" style="width:auto;padding:10px 24px;">➕ הוסף שירות</button>
+                    `;
             }
             return `
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-                    <h3>✂️ השירותים שלי</h3>
-                    <button class="btn-primary" onclick="addService()" style="width:auto;padding:10px 24px;">➕ הוסף שירות</button>
-                </div>
-                ${services.map(s => `
-                    <div class="service-item">
-                        <div><strong>${s.name}</strong> <span style="color:rgba(255,255,255,0.4);margin-right:10px;">⏱️ ${s.duration_minutes}דק • 💰 ${s.price}₪</span></div>
-                        <button class="btn-sm danger" onclick="deleteService('${s.id}')">🗑️</button>
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+                        <h3>✂️ השירותים שלי</h3>
+                        <button class="btn-primary" onclick="addService()" style="width:auto;padding:10px 24px;">➕ הוסף שירות</button>
                     </div>
-                `).join('')}
-            `;
+                    ${services.map(s => `
+                        <div class="service-item">
+                            <div><strong>${s.name}</strong> <span style="color:rgba(255,255,255,0.4);margin-right:10px;">⏱️ ${s.duration_minutes}דק • 💰 ${s.price}₪</span></div>
+                            <button class="btn-sm danger" onclick="deleteService('${s.id}')">🗑️</button>
+                        </div>
+                    `).join('')}
+                `;
         }
 
         // ===== מעבר טאב =====
