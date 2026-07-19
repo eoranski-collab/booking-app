@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        /* כל העיצובים נשארים כפי שהיו */
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Heebo',sans-serif;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;direction:rtl}
         .card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:40px;max-width:480px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,0.6)}
@@ -38,20 +37,25 @@
         .success-box .icon{font-size:56px;margin-bottom:12px}
         .success-box h3{color:#48bb78;margin-bottom:4px}
         .success-box p{color:rgba(255,255,255,0.5);font-size:14px}
+        .loading{text-align:center;padding:20px;color:rgba(255,255,255,0.5)}
+        .loading .spinner{display:inline-block;margin:0}
     </style>
 </head>
 <body>
 <div class="card">
     <div class="logo">
         <div class="icon">✂️</div>
-        <!-- כאן יופיע שם העסק -->
         <h1 id="businessName">MyCut</h1>
         <div class="sub">📅 קבע תור בקלות</div>
     </div>
 
     <div id="alert" class="alert"></div>
 
-    <form id="bookingForm">
+    <div id="loadingMessage" class="loading">
+        <span class="spinner"></span> טוען שירותים...
+    </div>
+
+    <form id="bookingForm" style="display:none;">
         <div class="form-group">
             <label>שם מלא <span class="req">*</span></label>
             <input type="text" id="customerName" placeholder="הכנס את שמך" required />
@@ -104,31 +108,80 @@
     // ================================================
     async function loadBusinessData() {
         try {
-            // 1. שליפת העסק הראשון (לפי הזמנתך, לשים את האימייל הנכון)
-            const { data: businesses, error } = await sb
-                .from('businesses')
-                .select('id, name')
-                .eq('email', 'opir123@business.com') // 🛠️ החלף כאן לאימייל שלך
-                .limit(1);
+            // 1. בדיקה אם יש business ID בכתובת URL
+            const params = new URLSearchParams(window.location.search);
+            let businessIdFromUrl = params.get('business');
 
-            if (error) throw error;
+            // 2. אם אין בכתובת - ניסיון למצוא את העסק שלך לפי אימייל
+            if (!businessIdFromUrl) {
+                console.log('🔍 לא נמצא ID בכתובת, מחפש לפי אימייל...');
+                const { data: bizByEmail, error: emailError } = await sb
+                    .from('businesses')
+                    .select('id, name')
+                    .eq('email', 'opir123@business.com') // 👈 החלף לאימייל שלך אם שונה
+                    .limit(1);
 
-            if (!businesses || businesses.length === 0) {
-                showAlert('❌ לא נמצא עסק', 'error');
-                return;
+                if (emailError) throw emailError;
+
+                if (bizByEmail && bizByEmail.length > 0) {
+                    businessId = bizByEmail[0].id;
+                    document.getElementById('businessName').textContent = bizByEmail[0].name;
+                    console.log('✅ עסק נמצא לפי אימייל:', bizByEmail[0].name);
+                } else {
+                    // 3. אם אין לפי אימייל - קח את העסק הראשון
+                    console.log('🔍 לא נמצא לפי אימייל, מחפש את העסק הראשון...');
+                    const { data: firstBiz, error: firstError } = await sb
+                        .from('businesses')
+                        .select('id, name')
+                        .limit(1);
+
+                    if (firstError) throw firstError;
+
+                    if (firstBiz && firstBiz.length > 0) {
+                        businessId = firstBiz[0].id;
+                        document.getElementById('businessName').textContent = firstBiz[0].name;
+                        console.log('✅ עסק ראשון:', firstBiz[0].name);
+                    } else {
+                        showAlert('❌ לא נמצא עסק במערכת', 'error');
+                        document.getElementById('loadingMessage').style.display = 'none';
+                        return;
+                    }
+                }
+            } else {
+                // 4. יש ID בכתובת - משתמשים בו
+                console.log('✅ ID נמצא בכתובת:', businessIdFromUrl);
+                const { data: bizById, error: idError } = await sb
+                    .from('businesses')
+                    .select('id, name')
+                    .eq('id', businessIdFromUrl)
+                    .limit(1);
+
+                if (idError) throw idError;
+
+                if (bizById && bizById.length > 0) {
+                    businessId = bizById[0].id;
+                    document.getElementById('businessName').textContent = bizById[0].name;
+                    console.log('✅ עסק נמצא לפי ID:', bizById[0].name);
+                } else {
+                    showAlert('❌ עסק לא נמצא', 'error');
+                    document.getElementById('loadingMessage').style.display = 'none';
+                    return;
+                }
             }
 
-            businessId = businesses[0].id;
-            // 2. הצגת שם העסק
-            document.getElementById('businessName').textContent = businesses[0].name || 'MyCut';
+            // אם הגענו לכאן - יש לנו businessId
+            console.log('🏢 Business ID:', businessId);
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('bookingForm').style.display = 'block';
 
-            // טעינת נתונים נוספים
+            // טעינת נתונים
             await loadServices();
             await loadExistingAppointments();
 
         } catch (error) {
             console.error('❌ שגיאה:', error);
-            showAlert('❌ שגיאה בטעינת הנתונים', 'error');
+            showAlert('❌ שגיאה בטעינת הנתונים: ' + error.message, 'error');
+            document.getElementById('loadingMessage').style.display = 'none';
         }
     }
 
@@ -136,7 +189,12 @@
     // שליפת שירותים
     // ================================================
     async function loadServices() {
-        if (!businessId) return;
+        if (!businessId) {
+            console.log('❌ אין business ID');
+            return;
+        }
+
+        console.log('📡 שולף שירותים עבור:', businessId);
 
         const { data, error } = await sb
             .from('services')
@@ -147,11 +205,17 @@
 
         if (error) {
             console.error('❌ שגיאת שירותים:', error);
+            showAlert('❌ שגיאה בטעינת שירותים: ' + error.message, 'error');
             return;
         }
 
         services = data || [];
+        console.log('✅ נמצאו', services.length, 'שירותים');
         populateServices();
+
+        if (services.length === 0) {
+            showAlert('⚠️ אין שירותים זמינים לעסק זה', 'error');
+        }
     }
 
     function populateServices() {
@@ -218,7 +282,7 @@
         clearTimeout(window.alertTimeout);
         window.alertTimeout = setTimeout(() => {
             alert.className = 'alert';
-        }, 5000);
+        }, 6000);
     }
 
     function hideAlert() {
