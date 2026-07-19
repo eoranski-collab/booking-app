@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MyCut - דשבורד</title>
+    <title>MyCut - דשבורד ניהול</title>
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&display=swap" rel="stylesheet" />
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
@@ -24,16 +24,17 @@
         .unique-link-box .link-wrapper code{background:rgba(255,255,255,0.06);padding:8px 14px;border-radius:8px;font-size:13px;color:#fff;word-break:break-all;flex:1;min-width:200px;font-family:monospace;direction:ltr;text-align:left}
         .unique-link-box .link-wrapper .btn-copy{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);padding:6px 16px;border-radius:30px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:13px;transition:all 0.3s}
         .unique-link-box .link-wrapper .btn-copy:hover{background:rgba(245,87,108,0.15);border-color:#f5576c;color:#fff}
-        .unique-link-box .hint{font-size:12px;color:rgba(255,255,255,0.3);margin-top:6px}
         
         .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:30px}
         .stat-card{background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;text-align:center}
         .stat-card .number{font-size:32px;font-weight:900;background:linear-gradient(135deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
         .stat-card .label{font-size:13px;color:rgba(255,255,255,0.4);margin-top:4px}
+        
         .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
         .tab{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);padding:10px 22px;border-radius:30px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:14px;font-weight:500;transition:all 0.3s}
         .tab:hover{background:rgba(255,255,255,0.08);color:#fff}
         .tab.active{background:linear-gradient(135deg,#f093fb,#f5576c);border-color:transparent;color:#fff;box-shadow:0 8px 30px rgba(245,87,108,0.3)}
+        
         .content{background:rgba(255,255,255,0.03);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.05);border-radius:20px;padding:24px;min-height:300px}
         .empty{text-align:center;padding:50px 20px;color:rgba(255,255,255,0.3)}
         .empty .icon{font-size:48px;margin-bottom:12px}
@@ -53,6 +54,8 @@
         .btn-primary{background:linear-gradient(135deg,#f093fb,#f5576c);border:none;color:#fff;padding:14px 32px;border-radius:30px;font-family:'Heebo',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.3s;box-shadow:0 8px 30px rgba(245,87,108,0.3);width:100%}
         .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(245,87,108,0.5)}
         .btn-primary:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+        .btn-secondary{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:30px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:13px;transition:all 0.3s}
+        .btn-secondary:hover{background:rgba(245,87,108,0.15);border-color:#f5576c;color:#fff}
         .form-group{margin-bottom:16px}
         .form-group label{display:block;font-size:13px;font-weight:600;color:rgba(255,255,255,0.6);margin-bottom:4px}
         .form-group input,.form-group select{width:100%;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;color:#fff;font-family:'Heebo',sans-serif;font-size:14px;transition:all 0.3s;outline:none}
@@ -64,6 +67,11 @@
         @keyframes spin{to{transform:rotate(360deg)}}
         .service-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
         .service-item:last-child{border-bottom:none}
+        .hours-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+        .hours-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px 16px}
+        .hours-card .day{font-weight:600;font-size:14px}
+        .hours-card .time{font-size:13px;color:rgba(255,255,255,0.5)}
+        .hours-card .closed{color:#f5576c;font-weight:500}
         @media(max-width:768px){.header{padding:12px 16px}.container{padding:12px}.stats{grid-template-columns:1fr 1fr}.content{padding:16px}}
         @media(max-width:480px){.stats{grid-template-columns:1fr}.item{flex-direction:column;align-items:stretch}.item .actions{justify-content:flex-start;flex-wrap:wrap}}
     </style>
@@ -82,14 +90,13 @@
     <!-- MAIN -->
     <div class="container">
 
-        <!-- ✅ קישור ייחודי ללקוחות -->
+        <!-- קישור ייחודי -->
         <div class="unique-link-box" id="uniqueLinkBox" style="display:none;">
             <div class="label">📋 קישור ייחודי לעסק שלך - שלח ללקוחות:</div>
             <div class="link-wrapper">
                 <code id="clientLink">טוען...</code>
                 <button class="btn-copy" onclick="copyLink()">📋 העתק</button>
             </div>
-            <div class="hint">💡 הלקוחות יכנסו לקישור הזה ויקבעו תור ישירות לעסק שלך</div>
         </div>
 
         <div class="stats">
@@ -99,11 +106,14 @@
             <div class="stat-card"><div class="number" id="servicesCount">0</div><div class="label">✂️ שירותים</div></div>
         </div>
 
+        <!-- ✅ כל הטאבים -->
         <div class="tabs">
             <button class="tab active" onclick="switchTab('today')">📅 היום</button>
             <button class="tab" onclick="switchTab('all')">📋 כל התורים</button>
             <button class="tab" onclick="switchTab('add')">➕ תור חדש</button>
             <button class="tab" onclick="switchTab('services')">✂️ שירותים</button>
+            <button class="tab" onclick="switchTab('employees')">👨‍💼 עובדים</button>
+            <button class="tab" onclick="switchTab('settings')">⚙️ הגדרות</button>
         </div>
 
         <div class="content" id="tabContent">
@@ -115,9 +125,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
     </script>
     <script>
-        // ============================================
-        // קוד פשוט שעובד - מתחבר ישירות לעסק
-        // ============================================
+        // ================================================
+        // קוד ראשי - כל הפונקציות
+        // ================================================
         const SUPABASE_URL = 'https://bcbnvtszkfjhfujnxldm.supabase.co';
         const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';
         const { createClient } = supabase;
@@ -126,81 +136,36 @@
         let BUSINESS_ID = null;
         let appointments = [];
         let services = [];
+        let employees = [];
+        let businessHours = [];
+        let holidays = [];
 
         // ===== בדיקת התחברות =====
         async function checkAuth() {
             const { data: { user }, error } = await sb.auth.getUser();
-            if (error || !user) {
-                window.location.href = 'login.html';
-                return null;
-            }
-            console.log('✅ מחובר:', user.email);
+            if (error || !user) { window.location.href = 'login.html'; return null; }
             return user;
         }
 
         // ===== מציאת העסק =====
         async function findBusiness(user) {
-            // 1. נסה למצוא ב-users
-            const { data: userData } = await sb
-                .from('users')
-                .select('business_id')
-                .eq('id', user.id)
-                .maybeSingle();
-
-            if (userData?.business_id) {
-                BUSINESS_ID = userData.business_id;
-                console.log('✅ עסק נמצא דרך users');
-                // שליפת שם העסק
-                const { data: biz } = await sb.from('businesses').select('name').eq('id', BUSINESS_ID).maybeSingle();
-                if (biz) document.getElementById('bizName').textContent = biz.name;
-                updateClientLink();
-                return;
-            }
-
-            // 2. נסה לפי אימייל
-            const { data: bizData } = await sb
-                .from('businesses')
-                .select('id, name')
-                .eq('email', user.email)
-                .maybeSingle();
-
-            if (bizData) {
-                BUSINESS_ID = bizData.id;
-                console.log('✅ עסק נמצא דרך אימייל:', bizData.name);
+            const { data: userData } = await sb.from('users').select('business_id').eq('id', user.id).maybeSingle();
+            if (userData?.business_id) { BUSINESS_ID = userData.business_id; const { data: biz } = await sb.from(
+                    'businesses').select('name').eq('id', BUSINESS_ID).maybeSingle(); if (biz) document.getElementById(
+                    'bizName').textContent = biz.name; updateClientLink(); return; }
+            const { data: bizData } = await sb.from('businesses').select('id, name').eq('email', user.email).maybeSingle();
+            if (bizData) { BUSINESS_ID = bizData.id;
                 document.getElementById('bizName').textContent = bizData.name;
-
-                // עדכן את users
                 await sb.from('users').update({ business_id: BUSINESS_ID }).eq('id', user.id);
-                updateClientLink();
-                return;
-            }
-
-            // 3. קח את העסק הראשון
-            const { data: allBiz } = await sb
-                .from('businesses')
-                .select('id, name')
-                .limit(1);
-
-            if (allBiz && allBiz.length > 0) {
-                BUSINESS_ID = allBiz[0].id;
-                console.log('✅ עסק ראשון:', allBiz[0].name);
+                updateClientLink(); return; }
+            const { data: allBiz } = await sb.from('businesses').select('id, name').limit(1);
+            if (allBiz && allBiz.length > 0) { BUSINESS_ID = allBiz[0].id;
                 document.getElementById('bizName').textContent = allBiz[0].name;
-                updateClientLink();
-                return;
-            }
-
-            // 4. אין עסק
+                updateClientLink(); return; }
             document.getElementById('bizName').textContent = '❌ לא נמצא עסק';
-            document.getElementById('tabContent').innerHTML = `
-                    <div class="empty"><div class="icon">❌</div>
-                    <h3>לא נמצא עסק</h3>
-                    <p>אין עסק מקושר למשתמש זה.</p>
-                    <button class="btn-primary" onclick="window.location.href='register.html'" style="width:auto;padding:10px 24px;margin-top:16px;">📝 הרשם עסק</button>
-                    </div>
-                `;
         }
 
-        // ===== קישור ייחודי ללקוחות =====
+        // ===== קישור ייחודי =====
         function updateClientLink() {
             const box = document.getElementById('uniqueLinkBox');
             const linkEl = document.getElementById('clientLink');
@@ -217,14 +182,9 @@
             const linkEl = document.getElementById('clientLink');
             const url = linkEl.dataset.url || linkEl.textContent;
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(url).then(() => {
-                    alert('✅ הקישור הועתק! שלח אותו ללקוחות שלך.');
-                }).catch(() => {
-                    fallbackCopy(url);
-                });
-            } else {
-                fallbackCopy(url);
-            }
+                navigator.clipboard.writeText(url).then(() => { alert('✅ הקישור הועתק!'); }).catch(() => { fallbackCopy(
+                    url); });
+            } else { fallbackCopy(url); }
         };
 
         function fallbackCopy(text) {
@@ -232,59 +192,42 @@
             textArea.value = text;
             document.body.appendChild(textArea);
             textArea.select();
-            try {
-                document.execCommand('copy');
-                alert('✅ הקישור הועתק! שלח אותו ללקוחות שלך.');
-            } catch (err) {
-                alert('❌ לא הצלחנו להעתיק. העתק ידנית: ' + text);
-            }
+            try { document.execCommand('copy');
+                alert('✅ הקישור הועתק!'); } catch (err) { alert('❌ העתק ידנית: ' + text); }
             textArea.remove();
         }
 
         // ===== טעינת נתונים =====
         async function loadData() {
             if (!BUSINESS_ID) return;
-
-            // תורים
-            const { data: apps } = await sb
-                .from('appointments')
-                .select('*')
-                .eq('business_id', BUSINESS_ID)
-                .order('start_time', { ascending: true });
-
+            const { data: apps } = await sb.from('appointments').select('*').eq('business_id', BUSINESS_ID).order(
+                'start_time', { ascending: true });
             appointments = apps || [];
-
-            // שירותים
-            const { data: servs } = await sb
-                .from('services')
-                .select('*')
-                .eq('business_id', BUSINESS_ID)
-                .eq('is_active', true);
-
+            const { data: servs } = await sb.from('services').select('*').eq('business_id', BUSINESS_ID).eq('is_active',
+                true);
             services = servs || [];
+            const { data: emps } = await sb.from('employees').select('*').eq('business_id', BUSINESS_ID).eq('is_active',
+                true);
+            employees = emps || [];
+            const { data: hours } = await sb.from('business_hours').select('*').eq('business_id', BUSINESS_ID);
+            businessHours = hours || [];
+            const { data: hols } = await sb.from('holidays').select('*').eq('business_id', BUSINESS_ID);
+            holidays = hols || [];
 
-            // עדכון סטטיסטיקות
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const todayApps = appointments.filter(a => new Date(a.start_time) >= today);
             const pending = appointments.filter(a => a.status === 'pending');
-
             document.getElementById('todayCount').textContent = todayApps.length;
             document.getElementById('pendingCount').textContent = pending.length;
             document.getElementById('customersCount').textContent = appointments.filter(a => a.customer_name).length;
             document.getElementById('servicesCount').textContent = services.length;
-
-            console.log('📊 נטען:', appointments.length, 'תורים,', services.length, 'שירותים');
         }
 
         // ===== תצוגה =====
-        function formatTime(d) {
-            return new Date(d).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-        }
+        function formatTime(d) { return new Date(d).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }); }
 
-        function formatDate(d) {
-            return new Date(d).toLocaleDateString('he-IL');
-        }
+        function formatDate(d) { return new Date(d).toLocaleDateString('he-IL'); }
 
         function getStatusLabel(s) {
             const map = { 'pending': '⏳ ממתין', 'confirmed': '✅ מאושר', 'cancelled': '❌ מבוטל', 'completed': '✔️ הושלם' };
@@ -297,100 +240,217 @@
             return map[s] || '';
         }
 
+        const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
+        // ===== רנדר טאבים =====
         function renderToday() {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const items = appointments.filter(a => new Date(a.start_time) >= today);
             if (!items.length) return `<div class="empty"><div class="icon">📭</div><p>אין תורים להיום</p></div>`;
             return items.map(a => `
-                    <div class="item">
-                        <div class="info">
-                            <div class="name">${a.customer_name || 'לקוח'} — ${a.service_name || 'שירות'}</div>
-                            <div class="details">📞 ${a.customer_phone || ''} • 🕐 ${formatTime(a.start_time)}</div>
-                        </div>
-                        <div class="actions">
-                            <span class="badge ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
-                            ${a.status !== 'cancelled' ? `<button class="btn-sm danger" onclick="cancelApp('${a.id}')">❌ בטל</button>` : ''}
-                        </div>
-                    </div>
-                `).join('');
+                <div class="item">
+                    <div class="info"><div class="name">${a.customer_name||'לקוח'} — ${a.service_name||'שירות'}</div>
+                    <div class="details">📞 ${a.customer_phone||''} • 🕐 ${formatTime(a.start_time)}</div></div>
+                    <div class="actions"><span class="badge ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
+                    ${a.status!=='cancelled'?`<button class="btn-sm danger" onclick="cancelApp('${a.id}')">❌ בטל</button>`:''}</div>
+                </div>`).join('');
         }
 
         function renderAll() {
             if (!appointments.length) return `<div class="empty"><div class="icon">📭</div><p>אין תורים</p></div>`;
             return appointments.map(a => `
-                    <div class="item">
-                        <div class="info">
-                            <div class="name">${a.customer_name || 'לקוח'} — ${a.service_name || 'שירות'}</div>
-                            <div class="details">📅 ${formatDate(a.start_time)} • 🕐 ${formatTime(a.start_time)} • 📞 ${a.customer_phone || ''}</div>
-                        </div>
-                        <div class="actions">
-                            <span class="badge ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
-                            ${a.status !== 'cancelled' ? `<button class="btn-sm danger" onclick="cancelApp('${a.id}')">❌ בטל</button>` : ''}
-                        </div>
-                    </div>
-                `).join('');
+                <div class="item">
+                    <div class="info"><div class="name">${a.customer_name||'לקוח'} — ${a.service_name||'שירות'}</div>
+                    <div class="details">📅 ${formatDate(a.start_time)} • 🕐 ${formatTime(a.start_time)} • 📞 ${a.customer_phone||''}</div></div>
+                    <div class="actions"><span class="badge ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
+                    ${a.status!=='cancelled'?`<button class="btn-sm danger" onclick="cancelApp('${a.id}')">❌ בטל</button>`:''}</div>
+                </div>`).join('');
         }
 
         function renderAdd() {
             const opts = services.map(s =>
                 `<option value="${s.id}">${s.name} (${s.duration_minutes}דק, ${s.price}₪)</option>`).join('');
+            const empOpts = employees.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
             return `
-                    <h3>➕ תור חדש</h3>
-                    <form onsubmit="addApp(event)">
-                        <div class="form-group"><label>שם לקוח *</label><input type="text" id="cName" required></div>
-                        <div class="form-group"><label>טלפון *</label><input type="tel" id="cPhone" required></div>
-                        <div class="form-group"><label>שירות *</label><select id="sId" required><option value="">בחר...</option>${opts}</select></div>
-                        <div class="form-row">
-                            <div class="form-group"><label>תאריך *</label><input type="date" id="aDate" required></div>
-                            <div class="form-group"><label>שעה *</label><input type="time" id="aTime" required></div>
-                        </div>
-                        <button type="submit" class="btn-primary">💾 שמור תור</button>
-                    </form>
-                `;
+                <h3>➕ תור חדש</h3>
+                <form onsubmit="addApp(event)">
+                    <div class="form-group"><label>שם לקוח *</label><input type="text" id="cName" required></div>
+                    <div class="form-group"><label>טלפון *</label><input type="tel" id="cPhone" required></div>
+                    <div class="form-group"><label>שירות *</label><select id="sId" required><option value="">בחר...</option>${opts}</select></div>
+                    <div class="form-group"><label>עובד (אופציונלי)</label><select id="empId"><option value="">ללא העדפה</option>${empOpts}</select></div>
+                    <div class="form-row">
+                        <div class="form-group"><label>תאריך *</label><input type="date" id="aDate" required></div>
+                        <div class="form-group"><label>שעה *</label><input type="time" id="aTime" required></div>
+                    </div>
+                    <button type="submit" class="btn-primary">💾 שמור תור</button>
+                </form>
+            `;
         }
 
         function renderServices() {
             if (!services.length) {
-                return `
-                        <div class="empty"><div class="icon">✂️</div><p>אין שירותים</p></div>
-                        <button class="btn-primary" onclick="addService()" style="width:auto;padding:10px 24px;">➕ הוסף שירות</button>
-                    `;
+                return `<div class="empty"><div class="icon">✂️</div><p>אין שירותים</p></div>
+                        <button class="btn-primary" onclick="addService()" style="width:auto;padding:10px 24px;">➕ הוסף שירות</button>`;
             }
             return `
-                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-                        <h3>✂️ השירותים שלי</h3>
-                        <button class="btn-primary" onclick="addService()" style="width:auto;padding:10px 24px;">➕ הוסף שירות</button>
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+                    <h3>✂️ השירותים שלי</h3>
+                    <button class="btn-primary" onclick="addService()" style="width:auto;padding:10px 24px;">➕ הוסף שירות</button>
+                </div>
+                ${services.map(s => `
+                    <div class="service-item">
+                        <div><strong>${s.name}</strong> <span style="color:rgba(255,255,255,0.4);margin-right:10px;">⏱️ ${s.duration_minutes}דק • 💰 ${s.price}₪</span></div>
+                        <button class="btn-sm danger" onclick="deleteService('${s.id}')">🗑️</button>
                     </div>
-                    ${services.map(s => `
-                        <div class="service-item">
-                            <div><strong>${s.name}</strong> <span style="color:rgba(255,255,255,0.4);margin-right:10px;">⏱️ ${s.duration_minutes}דק • 💰 ${s.price}₪</span></div>
-                            <button class="btn-sm danger" onclick="deleteService('${s.id}')">🗑️</button>
-                        </div>
-                    `).join('')}
-                `;
+                `).join('')}
+            `;
         }
 
-        // ===== מעבר טאב =====
-        window.switchTab = function(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(t => {
-                if (t.textContent.includes(tab === 'today' ? 'היום' : tab === 'all' ? 'כל' : tab === 'add' ? 'תור' :
-                    'שירותים')) t.classList.add('active');
-            });
-            const container = document.getElementById('tabContent');
-            if (tab === 'today') container.innerHTML = renderToday();
-            else if (tab === 'all') container.innerHTML = renderAll();
-            else if (tab === 'add') container.innerHTML = renderAdd();
-            else if (tab === 'services') container.innerHTML = renderServices();
+        // ===== 👨‍💼 ניהול עובדים =====
+        function renderEmployees() {
+            const list = employees.length ? employees.map(e => `
+                <div class="item">
+                    <div class="info"><div class="name">${e.name}</div>
+                    <div class="details">📞 ${e.phone||''} ${e.position?`• ${e.position}`:''}</div></div>
+                    <div class="actions">
+                        <button class="btn-sm" onclick="editEmployee('${e.id}')">✏️</button>
+                        <button class="btn-sm danger" onclick="deleteEmployee('${e.id}')">🗑️</button>
+                    </div>
+                </div>
+            `).join('') : `<div class="empty"><div class="icon">👨‍💼</div><p>אין עובדים</p></div>`;
+
+            return `
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+                    <h3>👨‍💼 צוות העובדים</h3>
+                    <button class="btn-primary" onclick="addEmployee()" style="width:auto;padding:10px 24px;">➕ הוסף עובד</button>
+                </div>
+                ${list}
+            `;
+        }
+
+        window.addEmployee = async function() {
+            const name = prompt('📝 שם העובד:');
+            if (!name) return;
+            const phone = prompt('📞 טלפון:');
+            if (!phone) return;
+            const { error } = await sb.from('employees').insert([{ business_id: BUSINESS_ID, name, phone, is_active: true }]);
+            if (error) { alert('❌ ' + error.message); return; }
+            alert('✅ עובד נוסף!');
+            await loadData();
+            switchTab('employees');
         };
 
-        // ===== פעולות =====
+        window.deleteEmployee = async function(id) {
+            if (!confirm('למחוק עובד?')) return;
+            const { error } = await sb.from('employees').update({ is_active: false }).eq('id', id);
+            if (error) { alert('❌ ' + error.message); return; }
+            alert('✅ נמחק!');
+            await loadData();
+            switchTab('employees');
+        };
+
+        window.editEmployee = function(id) {
+            alert('🛠️ עריכת עובד - בקרוב');
+        };
+
+        // ===== ⚙️ הגדרות =====
+        function renderSettings() {
+            // שעות עבודה
+            let hoursHtml = '';
+            if (businessHours.length) {
+                hoursHtml = businessHours.map(h => `
+                    <div class="hours-card">
+                        <div class="day">${DAYS[h.day_of_week]}</div>
+                        ${h.is_open ? `<div class="time">🕐 ${h.open_time} - ${h.close_time}</div>` : `<div class="closed">❌ סגור</div>`}
+                    </div>
+                `).join('');
+            } else {
+                hoursHtml = `<div class="empty"><div class="icon">🕐</div><p>עדיין לא הוגדרו שעות עבודה</p></div>`;
+            }
+
+            // חגים
+            let holidaysHtml = '';
+            if (holidays.length) {
+                holidaysHtml = holidays.map(h => `
+                    <div class="item">
+                        <div><strong>${h.name||'חג'}</strong> - ${h.holiday_date} ${h.is_closed ? '🔒 סגור' : ''}</div>
+                        <button class="btn-sm danger" onclick="deleteHoliday('${h.id}')">🗑️</button>
+                    </div>
+                `).join('');
+            } else {
+                holidaysHtml = `<div class="empty"><div class="icon">🏖️</div><p>אין חגים או ימי חופש</p></div>`;
+            }
+
+            return `
+                <h3>⚙️ הגדרות העסק</h3>
+                <div style="display:grid;gap:24px;">
+
+                    <div style="background:rgba(255,255,255,0.04);padding:20px;border-radius:16px;">
+                        <h4>🕐 שעות עבודה</h4>
+                        <p style="color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:12px;">קבע את שעות הפתיחה והסגירה של העסק</p>
+                        <div class="hours-grid">${hoursHtml}</div>
+                        <button class="btn-secondary" onclick="editBusinessHours()" style="margin-top:12px;">✏️ ערוך שעות</button>
+                    </div>
+
+                    <div style="background:rgba(255,255,255,0.04);padding:20px;border-radius:16px;">
+                        <h4>🏖️ חגים וימי חופש</h4>
+                        <p style="color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:12px;">סגור את העסק בימים מיוחדים</p>
+                        ${holidaysHtml}
+                        <button class="btn-secondary" onclick="addHoliday()" style="margin-top:12px;">➕ הוסף חג</button>
+                    </div>
+
+                </div>
+            `;
+        }
+
+        // ===== עריכת שעות עבודה =====
+        window.editBusinessHours = function() {
+            const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+            let msg = '🏢 הגדר שעות עבודה:\n\n';
+            for (let i = 0; i < 7; i++) {
+                const existing = businessHours.find(h => h.day_of_week === i);
+                const current = existing ? `${existing.open_time}-${existing.close_time}` : 'סגור';
+                msg += `${days[i]}: ${current}\n`;
+            }
+            msg += '\n📝 כדי לערוך, נשתמש בטופס מתקדם בקרוב.';
+            alert(msg);
+        };
+
+        // ===== הוספת חג =====
+        window.addHoliday = async function() {
+            const date = prompt('📅 תאריך (YYYY-MM-DD):');
+            if (!date) return;
+            const name = prompt('📝 שם החג/יום החופש:');
+            if (!name) return;
+            const { error } = await sb.from('holidays').insert([{
+                business_id: BUSINESS_ID,
+                holiday_date: date,
+                name: name,
+                is_closed: true
+            }]);
+            if (error) { alert('❌ ' + error.message); return; }
+            alert('✅ חג נוסף!');
+            await loadData();
+            switchTab('settings');
+        };
+
+        window.deleteHoliday = async function(id) {
+            if (!confirm('למחוק חג?')) return;
+            const { error } = await sb.from('holidays').delete().eq('id', id);
+            if (error) { alert('❌ ' + error.message); return; }
+            alert('✅ נמחק!');
+            await loadData();
+            switchTab('settings');
+        };
+
+        // ===== פעולות תורים =====
         window.addApp = async function(e) {
             e.preventDefault();
             const name = document.getElementById('cName').value.trim();
             const phone = document.getElementById('cPhone').value.trim();
             const serviceId = document.getElementById('sId').value;
+            const employeeId = document.getElementById('empId').value || null;
             const date = document.getElementById('aDate').value;
             const time = document.getElementById('aTime').value;
             if (!name || !phone || !serviceId || !date || !time) { alert('❌ יש למלא הכל'); return; }
@@ -398,78 +458,28 @@
             if (!service) { alert('❌ שירות לא נמצא'); return; }
             const start = new Date(`${date}T${time}:00`);
             const end = new Date(start.getTime() + service.duration_minutes * 60000);
+
+            // בדיקת זמינות
+            const { data: conflict } = await sb.rpc('is_time_slot_available', {
+                p_business_id: BUSINESS_ID,
+                p_employee_id: employeeId,
+                p_start_time: start.toISOString(),
+                p_end_time: end.toISOString()
+            });
+
+            if (conflict === false) {
+                alert('❌ השעה תפוסה או שהעסק סגור');
+                return;
+            }
+
             const { error } = await sb.from('appointments').insert([{
                 business_id: BUSINESS_ID,
                 customer_name: name,
                 customer_phone: phone,
                 service_id: serviceId,
                 service_name: service.name,
+                employee_id: employeeId,
                 start_time: start.toISOString(),
                 end_time: end.toISOString(),
                 price: service.price,
-                status: 'confirmed'
-            }]);
-            if (error) { alert('❌ ' + error.message); return; }
-            alert('✅ תור נוצר!');
-            await loadData();
-            switchTab('today');
-        };
-
-        window.cancelApp = async function(id) {
-            if (!confirm('לבטל תור?')) return;
-            const { error } = await sb.from('appointments').update({ status: 'cancelled' }).eq('id', id);
-            if (error) { alert('❌ ' + error.message); return; }
-            alert('✅ בוטל!');
-            await loadData();
-            switchTab('today');
-        };
-
-        window.addService = async function() {
-            const name = prompt('📝 שם השירות:');
-            if (!name) return;
-            const duration = parseInt(prompt('⏱️ משך (דקות):'));
-            if (!duration) return;
-            const price = parseFloat(prompt('💰 מחיר (ש"ח):'));
-            if (!price) return;
-            const { error } = await sb.from('services').insert([{
-                business_id: BUSINESS_ID,
-                name: name,
-                duration_minutes: duration,
-                price: price,
-                is_active: true
-            }]);
-            if (error) { alert('❌ ' + error.message); return; }
-            alert('✅ שירות נוסף!');
-            await loadData();
-            switchTab('services');
-        };
-
-        window.deleteService = async function(id) {
-            if (!confirm('למחוק שירות?')) return;
-            const { error } = await sb.from('services').update({ is_active: false }).eq('id', id);
-            if (error) { alert('❌ ' + error.message); return; }
-            alert('✅ נמחק!');
-            await loadData();
-            switchTab('services');
-        };
-
-        window.logout = async function() {
-            await sb.auth.signOut();
-            localStorage.clear();
-            window.location.href = 'login.html';
-        };
-
-        // ===== אתחול =====
-        async function init() {
-            const user = await checkAuth();
-            if (!user) return;
-            await findBusiness(user);
-            if (!BUSINESS_ID) return;
-            await loadData();
-            switchTab('today');
-        }
-
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
-</body>
-</html>
+                status: 'confirmed
