@@ -16,10 +16,16 @@
         .tab.active{background:#f5576c}
         .item{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid rgba(255,255,255,0.05)}
         input,select{width:100%;padding:10px;border-radius:8px;border:none;margin:4px 0}
-        .hidden{display:none}
-        .error{color:#f5576c;text-align:center;padding:40px}
+        .hours-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin:12px 0}
+        .hours-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 16px}
+        .hours-card .day{font-weight:bold;font-size:16px}
+        .hours-card .time{color:rgba(255,255,255,0.6);font-size:14px}
+        .hours-card .closed{color:#f5576c}
         .link-box{background:rgba(255,255,255,0.04);padding:12px;border-radius:12px;margin-bottom:16px}
         .link-box code{background:rgba(255,255,255,0.06);padding:6px 12px;border-radius:6px;display:block;font-size:13px;word-break:break-all}
+        .error{color:#f5576c;text-align:center;padding:40px}
+        .btn-sm{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);padding:4px 12px;border-radius:8px;cursor:pointer;font-size:12px}
+        .btn-sm:hover{background:rgba(245,87,108,0.15);border-color:#f5576c;color:#fff}
     </style>
 </head>
 <body>
@@ -70,85 +76,57 @@
         let appointments = [];
         let services = [];
         let employees = [];
+        let businessHours = [];
+        const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
         // ===== בדיקת משתמש =====
         async function init() {
             try {
-                // 1. בדיקת התחברות
                 const { data: { user }, error } = await sb.auth.getUser();
-                if (error || !user) {
-                    window.location.href = 'login.html';
-                    return;
-                }
+                if (error || !user) { window.location.href = 'login.html'; return; }
                 console.log('✅ מחובר:', user.email);
 
-                // 2. מציאת עסק
-                const { data: userData } = await sb
-                    .from('users')
-                    .select('business_id')
-                    .eq('id', user.id)
-                    .maybeSingle();
-
+                // מציאת עסק
+                const { data: userData } = await sb.from('users').select('business_id').eq('id', user.id).maybeSingle();
                 if (userData?.business_id) {
                     BUSINESS_ID = userData.business_id;
                 } else {
-                    // נסה לפי אימייל
-                    const { data: biz } = await sb
-                        .from('businesses')
-                        .select('id, name')
-                        .eq('email', user.email)
+                    const { data: biz } = await sb.from('businesses').select('id, name').eq('email', user.email)
                         .maybeSingle();
-                    if (biz) {
-                        BUSINESS_ID = biz.id;
+                    if (biz) { BUSINESS_ID = biz.id;
                         document.getElementById('bizName').textContent = biz.name;
-                        await sb.from('users').update({ business_id: BUSINESS_ID }).eq('id', user.id);
-                    }
+                        await sb.from('users').update({ business_id: BUSINESS_ID }).eq('id', user.id); }
                 }
 
                 if (!BUSINESS_ID) {
-                    // קח עסק ראשון
                     const { data: first } = await sb.from('businesses').select('id, name').limit(1);
-                    if (first && first.length > 0) {
-                        BUSINESS_ID = first[0].id;
-                        document.getElementById('bizName').textContent = first[0].name;
-                    }
+                    if (first && first.length > 0) { BUSINESS_ID = first[0].id;
+                        document.getElementById('bizName').textContent = first[0].name; }
                 }
 
                 if (!BUSINESS_ID) {
                     document.getElementById('bizName').textContent = '❌ לא נמצא עסק';
-                    document.getElementById('tabContent').innerHTML = `
-                        <div class="error">
-                            <h2>❌ לא נמצא עסק</h2>
-                            <button class="btn" onclick="window.location.href='register.html'">📝 הרשם עסק</button>
-                        </div>
-                    `;
+                    document.getElementById('tabContent').innerHTML =
+                        `<div class="error"><h2>❌ לא נמצא עסק</h2><button class="btn" onclick="window.location.href='register.html'">📝 הרשם עסק</button></div>`;
                     return;
                 }
 
-                // 3. שליפת שם העסק
-                const { data: bizName } = await sb
-                    .from('businesses')
-                    .select('name')
-                    .eq('id', BUSINESS_ID)
-                    .maybeSingle();
+                const { data: bizName } = await sb.from('businesses').select('name').eq('id', BUSINESS_ID).maybeSingle();
                 if (bizName) document.getElementById('bizName').textContent = bizName.name;
 
-                // 4. קישור ללקוחות
-                const linkBox = document.getElementById('linkBox');
+                // קישור ללקוחות
                 const linkEl = document.getElementById('clientLink');
                 const url = window.location.origin + window.location.pathname.replace('dashboard.html', 'client.html') +
                     '?business=' + BUSINESS_ID;
                 linkEl.textContent = url;
-                linkBox.style.display = 'block';
+                document.getElementById('linkBox').style.display = 'block';
 
-                // 5. טעינת נתונים
                 await loadData();
                 showTab('today');
 
             } catch (err) {
                 console.error('❌ שגיאה:', err);
-                document.getElementById('tabContent').innerHTML =
-                    `<div class="error">❌ שגיאה: ${err.message}</div>`;
+                document.getElementById('tabContent').innerHTML = `<div class="error">❌ שגיאה: ${err.message}</div>`;
             }
         }
 
@@ -156,31 +134,21 @@
         async function loadData() {
             if (!BUSINESS_ID) return;
 
-            const { data: apps } = await sb
-                .from('appointments')
-                .select('*')
-                .eq('business_id', BUSINESS_ID)
-                .order('start_time');
-
+            const { data: apps } = await sb.from('appointments').select('*').eq('business_id', BUSINESS_ID).order(
+            'start_time');
             appointments = apps || [];
 
-            const { data: servs } = await sb
-                .from('services')
-                .select('*')
-                .eq('business_id', BUSINESS_ID)
-                .eq('is_active', true);
-
+            const { data: servs } = await sb.from('services').select('*').eq('business_id', BUSINESS_ID).eq('is_active',
+                true);
             services = servs || [];
 
-            const { data: emps } = await sb
-                .from('employees')
-                .select('*')
-                .eq('business_id', BUSINESS_ID)
-                .eq('is_active', true);
-
+            const { data: emps } = await sb.from('employees').select('*').eq('business_id', BUSINESS_ID).eq('is_active',
+                true);
             employees = emps || [];
 
-            // סטטיסטיקות
+            const { data: hours } = await sb.from('business_hours').select('*').eq('business_id', BUSINESS_ID);
+            businessHours = hours || [];
+
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             document.getElementById('todayCount').textContent = appointments.filter(a => new Date(a.start_time) >= today)
@@ -189,17 +157,14 @@
             document.getElementById('customersCount').textContent = appointments.filter(a => a.customer_name).length;
             document.getElementById('servicesCount').textContent = services.length;
 
-            console.log('📊 נטען:', appointments.length, 'תורים,', services.length, 'שירותים');
+            console.log('📊 נטען:', appointments.length, 'תורים,', services.length, 'שירותים,', businessHours.length,
+                'שעות עבודה');
         }
 
-        // ===== תצוגה =====
-        function formatTime(d) {
-            return new Date(d).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-        }
+        // ===== פונקציות עזר =====
+        function formatTime(d) { return new Date(d).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }); }
 
-        function formatDate(d) {
-            return new Date(d).toLocaleDateString('he-IL');
-        }
+        function formatDate(d) { return new Date(d).toLocaleDateString('he-IL'); }
 
         function statusLabel(s) {
             const map = { 'pending': '⏳ ממתין', 'confirmed': '✅ מאושר', 'cancelled': '❌ מבוטל', 'completed': '✔️ הושלם' };
@@ -222,27 +187,17 @@
                 const items = appointments.filter(a => new Date(a.start_time) >= today);
                 container.innerHTML = items.length ? items.map(a => `
                         <div class="item">
-                            <div>
-                                <strong>${a.customer_name || 'לקוח'}</strong> - ${a.service_name || 'שירות'}<br>
-                                <small>🕐 ${formatTime(a.start_time)}</small>
-                            </div>
-                            <div>
-                                <span style="background:rgba(72,187,120,0.2);padding:4px 12px;border-radius:20px;font-size:12px;">${statusLabel(a.status)}</span>
-                                ${a.status !== 'cancelled' ? `<button class="btn" style="padding:4px 12px;font-size:12px;background:#e53e3e;" onclick="cancelApp('${a.id}')">בטל</button>` : ''}
-                            </div>
+                            <div><strong>${a.customer_name || 'לקוח'}</strong> - ${a.service_name || 'שירות'}<br><small>🕐 ${formatTime(a.start_time)}</small></div>
+                            <div><span style="background:rgba(72,187,120,0.2);padding:4px 12px;border-radius:20px;font-size:12px;">${statusLabel(a.status)}</span>
+                            ${a.status !== 'cancelled' ? `<button class="btn" style="padding:4px 12px;font-size:12px;background:#e53e3e;" onclick="cancelApp('${a.id}')">בטל</button>` : ''}</div>
                         </div>
                     `).join('') : '<div style="text-align:center;padding:40px;">📭 אין תורים להיום</div>';
             } else if (tab === 'all') {
                 container.innerHTML = appointments.length ? appointments.map(a => `
                         <div class="item">
-                            <div>
-                                <strong>${a.customer_name || 'לקוח'}</strong> - ${a.service_name || 'שירות'}<br>
-                                <small>📅 ${formatDate(a.start_time)} 🕐 ${formatTime(a.start_time)}</small>
-                            </div>
-                            <div>
-                                <span style="background:rgba(72,187,120,0.2);padding:4px 12px;border-radius:20px;font-size:12px;">${statusLabel(a.status)}</span>
-                                ${a.status !== 'cancelled' ? `<button class="btn" style="padding:4px 12px;font-size:12px;background:#e53e3e;" onclick="cancelApp('${a.id}')">בטל</button>` : ''}
-                            </div>
+                            <div><strong>${a.customer_name || 'לקוח'}</strong> - ${a.service_name || 'שירות'}<br><small>📅 ${formatDate(a.start_time)} 🕐 ${formatTime(a.start_time)}</small></div>
+                            <div><span style="background:rgba(72,187,120,0.2);padding:4px 12px;border-radius:20px;font-size:12px;">${statusLabel(a.status)}</span>
+                            ${a.status !== 'cancelled' ? `<button class="btn" style="padding:4px 12px;font-size:12px;background:#e53e3e;" onclick="cancelApp('${a.id}')">בטל</button>` : ''}</div>
                         </div>
                     `).join('') : '<div style="text-align:center;padding:40px;">📭 אין תורים</div>';
             } else if (tab === 'add') {
@@ -290,23 +245,122 @@
                         `).join('') : '<div style="text-align:center;padding:40px;">👨‍💼 אין עובדים</div>'}
                     `;
             } else if (tab === 'settings') {
+                // הצגת שעות עבודה
+                let hoursHtml = '';
+                if (businessHours.length > 0) {
+                    hoursHtml = businessHours.map(h => `
+                        <div class="hours-card">
+                            <div class="day">${DAYS[h.day_of_week]}</div>
+                            ${h.is_open ? `<div class="time">🕐 ${h.open_time} - ${h.close_time}</div>` : `<div class="closed">❌ סגור</div>`}
+                            <button class="btn-sm" onclick="editHour('${h.id}','${h.day_of_week}','${h.is_open}','${h.open_time||''}','${h.close_time||''}')" style="margin-top:6px;">✏️ ערוך</button>
+                        </div>
+                    `).join('');
+                } else {
+                    hoursHtml = `<div class="error">🕐 לא הוגדרו שעות עבודה</div>`;
+                }
+
                 container.innerHTML = `
                         <h3>⚙️ הגדרות</h3>
-                        <div style="background:rgba(255,255,255,0.04);padding:16px;border-radius:12px;margin-bottom:12px;">
+                        <div style="background:rgba(255,255,255,0.04);padding:16px;border-radius:12px;margin-bottom:16px;">
                             <h4>🕐 שעות עבודה</h4>
-                            <p style="color:rgba(255,255,255,0.4);font-size:13px;">בקרוב: עריכת שעות עבודה</p>
-                            <button class="btn" onclick="alert('🛠️ בקרוב')" style="padding:4px 16px;font-size:12px;background:#333;">✏️ ערוך</button>
+                            <div class="hours-grid">${hoursHtml}</div>
+                            <button class="btn" onclick="addHour()" style="padding:6px 16px;font-size:13px;">➕ הוסף יום</button>
                         </div>
                         <div style="background:rgba(255,255,255,0.04);padding:16px;border-radius:12px;">
                             <h4>🏖️ חגים</h4>
-                            <p style="color:rgba(255,255,255,0.4);font-size:13px;">בקרוב: הוספת חגים</p>
-                            <button class="btn" onclick="addHoliday()" style="padding:4px 16px;font-size:12px;">➕ הוסף חג</button>
+                            <button class="btn" onclick="addHoliday()" style="padding:6px 16px;font-size:13px;">➕ הוסף חג</button>
                         </div>
                     `;
             }
         };
 
-        // ===== פעולות =====
+        // ===== ניהול שעות עבודה =====
+        window.addHour = async function() {
+            let msg = '📅 בחר יום:\n\n';
+            for (let i = 0; i < 7; i++) {
+                const exists = businessHours.find(h => h.day_of_week === i);
+                msg += `${i+1}. ${DAYS[i]} ${exists ? '✅' : '❌'}\n`;
+            }
+            msg += '\nהקלד את מספר היום (1-7):';
+
+            const dayNum = prompt(msg);
+            if (!dayNum) return;
+            const dayIndex = parseInt(dayNum) - 1;
+            if (dayIndex < 0 || dayIndex > 6) { alert('❌ יום לא תקין'); return; }
+
+            const isOpen = confirm('האם העסק פתוח ביום זה?');
+            let openTime = '09:00',
+                closeTime = '18:00';
+            if (isOpen) {
+                openTime = prompt('🕐 שעת פתיחה (HH:MM):', '09:00');
+                if (!openTime) return;
+                closeTime = prompt('🕐 שעת סגירה (HH:MM):', '18:00');
+                if (!closeTime) return;
+            }
+
+            const { error } = await sb.from('business_hours').insert([{
+                business_id: BUSINESS_ID,
+                day_of_week: dayIndex,
+                is_open: isOpen,
+                open_time: isOpen ? openTime : null,
+                close_time: isOpen ? closeTime : null
+            }]);
+
+            if (error) { alert('❌ ' + error.message); return; }
+            alert('✅ שעות עבודה נשמרו!');
+            await loadData();
+            showTab('settings');
+        };
+
+        window.editHour = async function(id, day, isOpen, openTime, closeTime) {
+            const dayName = DAYS[parseInt(day)];
+            const action = prompt(
+                `✏️ עריכת ${dayName}\n\n1. שנה שעות\n2. סגור את היום\n3. פתח את היום\n4. מחק יום\n\nבחר מספר:`);
+
+            if (action === '1') {
+                const newOpen = prompt('🕐 שעת פתיחה (HH:MM):', openTime || '09:00');
+                if (!newOpen) return;
+                const newClose = prompt('🕐 שעת סגירה (HH:MM):', closeTime || '18:00');
+                if (!newClose) return;
+                const { error } = await sb.from('business_hours').update({
+                    is_open: true,
+                    open_time: newOpen,
+                    close_time: newClose
+                }).eq('id', id);
+                if (error) { alert('❌ ' + error.message); return; }
+                alert('✅ עודכן!');
+            } else if (action === '2') {
+                const { error } = await sb.from('business_hours').update({ is_open: false, open_time: null,
+                    close_time: null }).eq('id', id);
+                if (error) { alert('❌ ' + error.message); return; }
+                alert('✅ היום נסגר!');
+            } else if (action === '3') {
+                const newOpen = prompt('🕐 שעת פתיחה (HH:MM):', '09:00');
+                if (!newOpen) return;
+                const newClose = prompt('🕐 שעת סגירה (HH:MM):', '18:00');
+                if (!newClose) return;
+                const { error } = await sb.from('business_hours').update({
+                    is_open: true,
+                    open_time: newOpen,
+                    close_time: newClose
+                }).eq('id', id);
+                if (error) { alert('❌ ' + error.message); return; }
+                alert('✅ היום נפתח!');
+            } else if (action === '4') {
+                if (!confirm('למחוק את היום?')) return;
+                const { error } = await sb.from('business_hours').delete().eq('id', id);
+                if (error) { alert('❌ ' + error.message); return; }
+                alert('✅ נמחק!');
+            } else {
+                alert('❌ בחירה לא תקינה');
+                return;
+            }
+
+            await loadData();
+            showTab('settings');
+        };
+
+        // ===== פעולות תורים =====
         window.addApp = async function(e) {
             e.preventDefault();
             const name = document.getElementById('cName').value.trim();
