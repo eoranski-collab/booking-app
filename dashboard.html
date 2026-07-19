@@ -12,6 +12,7 @@
         .stat{background:rgba(255,255,255,0.05);padding:16px;border-radius:12px;text-align:center}
         .stat .num{font-size:28px;font-weight:bold;color:#f5576c}
         .btn{background:#f5576c;border:none;color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;margin:4px}
+        .btn:hover{opacity:0.8}
         .tab{background:rgba(255,255,255,0.05);border:none;color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;margin:4px}
         .tab.active{background:#f5576c}
         .item{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid rgba(255,255,255,0.05)}
@@ -256,7 +257,7 @@
                         </div>
                     `).join('');
                 } else {
-                    hoursHtml = `<div class="error">🕐 לא הוגדרו שעות עבודה</div>`;
+                    hoursHtml = `<div style="color:rgba(255,255,255,0.5);padding:20px;text-align:center;">🕐 לא הוגדרו שעות עבודה</div>`;
                 }
 
                 container.innerHTML = `
@@ -274,7 +275,7 @@
             }
         };
 
-        // ===== ניהול שעות עבודה =====
+        // ===== ⭐ ניהול שעות עבודה - הפונקציות החשובות! =====
         window.addHour = async function() {
             let msg = '📅 בחר יום:\n\n';
             for (let i = 0; i < 7; i++) {
@@ -298,66 +299,77 @@
                 if (!closeTime) return;
             }
 
-            const { error } = await sb.from('business_hours').insert([{
-                business_id: BUSINESS_ID,
-                day_of_week: dayIndex,
-                is_open: isOpen,
-                open_time: isOpen ? openTime : null,
-                close_time: isOpen ? closeTime : null
-            }]);
+            try {
+                const { error } = await sb.from('business_hours').insert([{
+                    business_id: BUSINESS_ID,
+                    day_of_week: dayIndex,
+                    is_open: isOpen,
+                    open_time: isOpen ? openTime : null,
+                    close_time: isOpen ? closeTime : null
+                }]);
 
-            if (error) { alert('❌ ' + error.message); return; }
-            alert('✅ שעות עבודה נשמרו!');
-            await loadData();
-            showTab('settings');
+                if (error) { alert('❌ ' + error.message); return; }
+                alert('✅ שעות עבודה נשמרו!');
+                await loadData();
+                showTab('settings');
+            } catch (err) {
+                alert('❌ שגיאה: ' + err.message);
+            }
         };
 
         window.editHour = async function(id, day, isOpen, openTime, closeTime) {
             const dayName = DAYS[parseInt(day)];
             const action = prompt(
-                `✏️ עריכת ${dayName}\n\n1. שנה שעות\n2. סגור את היום\n3. פתח את היום\n4. מחק יום\n\nבחר מספר:`);
+                `✏️ עריכת ${dayName}\n\n1. שנה שעות\n2. סגור את היום\n3. פתח את היום\n4. מחק יום\n\nבחר מספר:`
+                );
 
-            if (action === '1') {
-                const newOpen = prompt('🕐 שעת פתיחה (HH:MM):', openTime || '09:00');
-                if (!newOpen) return;
-                const newClose = prompt('🕐 שעת סגירה (HH:MM):', closeTime || '18:00');
-                if (!newClose) return;
-                const { error } = await sb.from('business_hours').update({
-                    is_open: true,
-                    open_time: newOpen,
-                    close_time: newClose
-                }).eq('id', id);
-                if (error) { alert('❌ ' + error.message); return; }
-                alert('✅ עודכן!');
-            } else if (action === '2') {
-                const { error } = await sb.from('business_hours').update({ is_open: false, open_time: null,
-                    close_time: null }).eq('id', id);
-                if (error) { alert('❌ ' + error.message); return; }
-                alert('✅ היום נסגר!');
-            } else if (action === '3') {
-                const newOpen = prompt('🕐 שעת פתיחה (HH:MM):', '09:00');
-                if (!newOpen) return;
-                const newClose = prompt('🕐 שעת סגירה (HH:MM):', '18:00');
-                if (!newClose) return;
-                const { error } = await sb.from('business_hours').update({
-                    is_open: true,
-                    open_time: newOpen,
-                    close_time: newClose
-                }).eq('id', id);
-                if (error) { alert('❌ ' + error.message); return; }
-                alert('✅ היום נפתח!');
-            } else if (action === '4') {
-                if (!confirm('למחוק את היום?')) return;
-                const { error } = await sb.from('business_hours').delete().eq('id', id);
-                if (error) { alert('❌ ' + error.message); return; }
-                alert('✅ נמחק!');
-            } else {
-                alert('❌ בחירה לא תקינה');
-                return;
+            if (!action) return;
+
+            try {
+                if (action === '1') {
+                    const newOpen = prompt('🕐 שעת פתיחה (HH:MM):', openTime || '09:00');
+                    if (!newOpen) return;
+                    const newClose = prompt('🕐 שעת סגירה (HH:MM):', closeTime || '18:00');
+                    if (!newClose) return;
+                    const { error } = await sb.from('business_hours').update({
+                        is_open: true,
+                        open_time: newOpen,
+                        close_time: newClose
+                    }).eq('id', id);
+                    if (error) { alert('❌ ' + error.message); return; }
+                    alert('✅ עודכן!');
+                } else if (action === '2') {
+                    const { error } = await sb.from('business_hours').update({ is_open: false, open_time: null,
+                        close_time: null }).eq('id', id);
+                    if (error) { alert('❌ ' + error.message); return; }
+                    alert('✅ היום נסגר!');
+                } else if (action === '3') {
+                    const newOpen = prompt('🕐 שעת פתיחה (HH:MM):', '09:00');
+                    if (!newOpen) return;
+                    const newClose = prompt('🕐 שעת סגירה (HH:MM):', '18:00');
+                    if (!newClose) return;
+                    const { error } = await sb.from('business_hours').update({
+                        is_open: true,
+                        open_time: newOpen,
+                        close_time: newClose
+                    }).eq('id', id);
+                    if (error) { alert('❌ ' + error.message); return; }
+                    alert('✅ היום נפתח!');
+                } else if (action === '4') {
+                    if (!confirm('למחוק את היום?')) return;
+                    const { error } = await sb.from('business_hours').delete().eq('id', id);
+                    if (error) { alert('❌ ' + error.message); return; }
+                    alert('✅ נמחק!');
+                } else {
+                    alert('❌ בחירה לא תקינה');
+                    return;
+                }
+
+                await loadData();
+                showTab('settings');
+            } catch (err) {
+                alert('❌ שגיאה: ' + err.message);
             }
-
-            await loadData();
-            showTab('settings');
         };
 
         // ===== פעולות תורים =====
