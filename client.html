@@ -52,7 +52,7 @@
     <div id="alert" class="alert"></div>
 
     <div id="loadingMessage" class="loading">
-        <span class="spinner"></span> טוען שירותים...
+        <span class="spinner"></span> טוען...
     </div>
 
     <form id="bookingForm" style="display:none;">
@@ -102,66 +102,51 @@
     let businessId = null;
     let services = [];
     let existingAppointments = [];
+    let businessHours = [];
 
     // ================================================
     // שליפת נתוני העסק
     // ================================================
     async function loadBusinessData() {
         try {
-            // 1. בדיקה אם יש business ID בכתובת URL
             const params = new URLSearchParams(window.location.search);
             let businessIdFromUrl = params.get('business');
 
-            // 2. אם אין בכתובת - ניסיון למצוא את העסק שלך לפי אימייל
             if (!businessIdFromUrl) {
-                console.log('🔍 לא נמצא ID בכתובת, מחפש לפי אימייל...');
-                const { data: bizByEmail, error: emailError } = await sb
+                const { data: bizByEmail } = await sb
                     .from('businesses')
                     .select('id, name')
-                    .eq('email', 'opir123@business.com') // 👈 החלף לאימייל שלך אם שונה
+                    .eq('email', 'opir123@business.com')
                     .limit(1);
-
-                if (emailError) throw emailError;
 
                 if (bizByEmail && bizByEmail.length > 0) {
                     businessId = bizByEmail[0].id;
                     document.getElementById('businessName').textContent = bizByEmail[0].name;
-                    console.log('✅ עסק נמצא לפי אימייל:', bizByEmail[0].name);
                 } else {
-                    // 3. אם אין לפי אימייל - קח את העסק הראשון
-                    console.log('🔍 לא נמצא לפי אימייל, מחפש את העסק הראשון...');
-                    const { data: firstBiz, error: firstError } = await sb
+                    const { data: firstBiz } = await sb
                         .from('businesses')
                         .select('id, name')
                         .limit(1);
 
-                    if (firstError) throw firstError;
-
                     if (firstBiz && firstBiz.length > 0) {
                         businessId = firstBiz[0].id;
                         document.getElementById('businessName').textContent = firstBiz[0].name;
-                        console.log('✅ עסק ראשון:', firstBiz[0].name);
                     } else {
-                        showAlert('❌ לא נמצא עסק במערכת', 'error');
+                        showAlert('❌ לא נמצא עסק', 'error');
                         document.getElementById('loadingMessage').style.display = 'none';
                         return;
                     }
                 }
             } else {
-                // 4. יש ID בכתובת - משתמשים בו
-                console.log('✅ ID נמצא בכתובת:', businessIdFromUrl);
-                const { data: bizById, error: idError } = await sb
+                const { data: bizById } = await sb
                     .from('businesses')
                     .select('id, name')
                     .eq('id', businessIdFromUrl)
                     .limit(1);
 
-                if (idError) throw idError;
-
                 if (bizById && bizById.length > 0) {
                     businessId = bizById[0].id;
                     document.getElementById('businessName').textContent = bizById[0].name;
-                    console.log('✅ עסק נמצא לפי ID:', bizById[0].name);
                 } else {
                     showAlert('❌ עסק לא נמצא', 'error');
                     document.getElementById('loadingMessage').style.display = 'none';
@@ -169,32 +154,98 @@
                 }
             }
 
-            // אם הגענו לכאן - יש לנו businessId
-            console.log('🏢 Business ID:', businessId);
             document.getElementById('loadingMessage').style.display = 'none';
             document.getElementById('bookingForm').style.display = 'block';
 
-            // טעינת נתונים
             await loadServices();
             await loadExistingAppointments();
+            await loadBusinessHours();
 
         } catch (error) {
             console.error('❌ שגיאה:', error);
-            showAlert('❌ שגיאה בטעינת הנתונים: ' + error.message, 'error');
+            showAlert('❌ שגיאה בטעינת הנתונים', 'error');
             document.getElementById('loadingMessage').style.display = 'none';
         }
+    }
+
+    // ================================================
+    // שליפת שעות עבודה
+    // ================================================
+    async function loadBusinessHours() {
+        if (!businessId) return;
+
+        const { data, error } = await sb
+            .from('business_hours')
+            .select('*')
+            .eq('business_id', businessId);
+
+        if (error) {
+            console.error('❌ שגיאת שעות עבודה:', error);
+            return;
+        }
+
+        businessHours = data || [];
+        console.log('🕐 שעות עבודה:', businessHours);
+    }
+
+    // ================================================
+    // בדיקת זמינות מתקדמת - כולל שעות עבודה
+    // ================================================
+    async function checkAvailability(startTime, endTime, employeeId = null) {
+        const date = new Date(startTime);
+        const dayOfWeek = date.getDay(); // 0=ראשון, 6=שבת
+        const timeStr = date.toTimeString().slice(0, 5); // HH:MM
+
+        // 1. בדיקת חגים
+        const dateStr = date.toISOString().split('T')[0];
+        const { data: holidays } = await sb
+            .from('holidays')
+            .select('*')
+            .eq('business_id', businessId)
+            .eq('holiday_date', dateStr)
+            .eq('is_closed', true);
+
+        if (holidays && holidays.length > 0) {
+            return { available: false, reason: '🏖️ העסק סגור בחג זה' };
+        }
+
+        // 2. בדיקת שעות עבודה
+        const dayHours = businessHours.find(h => h.day_of_week === dayOfWeek);
+
+        if (!dayHours || dayHours.is_open === false) {
+            return { available: false, reason: '⏰ העסק סגור ביום זה' };
+        }
+
+        // בדיקה אם השעה בגדר שעות הפתיחה
+        if (timeStr < dayHours.open_time || timeStr > dayHours.close_time) {
+            return { 
+                available: false, 
+                reason: `⏰ שעות פעילות: ${dayHours.open_time} - ${dayHours.close_time}` 
+            };
+        }
+
+        // 3. בדיקת התנגשות תורים
+        const { data: conflicts } = await sb
+            .from('appointments')
+            .select('*')
+            .eq('business_id', businessId)
+            .not('status', 'eq', 'cancelled')
+            .or(`employee_id.eq.${employeeId || ''},employee_id.is.null`)
+            .filter('start_time', 'lt', endTime)
+            .filter('end_time', 'gt', startTime);
+
+        if (conflicts && conflicts.length > 0) {
+            return { available: false, reason: '❌ השעה תפוסה' };
+        }
+
+        return { available: true };
     }
 
     // ================================================
     // שליפת שירותים
     // ================================================
     async function loadServices() {
-        if (!businessId) {
-            console.log('❌ אין business ID');
-            return;
-        }
-
-        console.log('📡 שולף שירותים עבור:', businessId);
+        if (!businessId) return;
 
         const { data, error } = await sb
             .from('services')
@@ -205,16 +256,14 @@
 
         if (error) {
             console.error('❌ שגיאת שירותים:', error);
-            showAlert('❌ שגיאה בטעינת שירותים: ' + error.message, 'error');
             return;
         }
 
         services = data || [];
-        console.log('✅ נמצאו', services.length, 'שירותים');
         populateServices();
 
         if (services.length === 0) {
-            showAlert('⚠️ אין שירותים זמינים לעסק זה', 'error');
+            showAlert('⚠️ אין שירותים זמינים', 'error');
         }
     }
 
@@ -256,23 +305,6 @@
     }
 
     // ================================================
-    // בדיקת זמינות
-    // ================================================
-    function isTimeAvailable(startTime, endTime) {
-        const start = new Date(startTime).getTime();
-        const end = new Date(endTime).getTime();
-
-        for (const app of existingAppointments) {
-            const appStart = new Date(app.start_time).getTime();
-            const appEnd = new Date(app.end_time).getTime();
-            if (start < appEnd && end > appStart) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    // ================================================
     // הודעות
     // ================================================
     function showAlert(msg, type = 'error') {
@@ -304,6 +336,27 @@
     }
 
     // ================================================
+    // עדכון שעות זמינות - הגבלה לשעות העבודה
+    // ================================================
+    document.getElementById('appointmentDate').addEventListener('change', function() {
+        const date = this.value;
+        const dayOfWeek = new Date(date + 'T00:00:00').getDay();
+        const dayHours = businessHours.find(h => h.day_of_week === dayOfWeek);
+        
+        const timeInput = document.getElementById('appointmentTime');
+        if (dayHours && dayHours.is_open) {
+            timeInput.min = dayHours.open_time;
+            timeInput.max = dayHours.close_time;
+            timeInput.placeholder = `${dayHours.open_time} - ${dayHours.close_time}`;
+        } else {
+            timeInput.min = '';
+            timeInput.max = '';
+            timeInput.placeholder = 'יום סגור';
+            showAlert('⏰ העסק סגור ביום זה', 'error');
+        }
+    });
+
+    // ================================================
     // שליחת הטופס
     // ================================================
     document.getElementById('bookingForm').addEventListener('submit', async (e) => {
@@ -328,8 +381,14 @@
         const startTime = new Date(`${date}T${time}:00`);
         const endTime = new Date(startTime.getTime() + service.duration_minutes * 60000);
 
-        if (!isTimeAvailable(startTime.toISOString(), endTime.toISOString())) {
-            showAlert('❌ השעה הזו תפוסה. נבחר שעה אחרת.', 'error');
+        // בדיקת זמינות
+        const availability = await checkAvailability(
+            startTime.toISOString(), 
+            endTime.toISOString()
+        );
+
+        if (!availability.available) {
+            showAlert(availability.reason, 'error');
             return;
         }
 
