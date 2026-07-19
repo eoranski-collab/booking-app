@@ -39,6 +39,12 @@
         .success-box p{color:rgba(255,255,255,0.5);font-size:14px}
         .loading{text-align:center;padding:20px;color:rgba(255,255,255,0.5)}
         .loading .spinner{display:inline-block;margin:0}
+        .time-slot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+        .time-slot{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px;text-align:center;cursor:pointer;transition:all 0.3s;font-size:14px}
+        .time-slot:hover{background:rgba(255,255,255,0.1);border-color:#f5576c}
+        .time-slot.selected{background:#f5576c;border-color:#f5576c;color:#fff}
+        .time-slot.unavailable{opacity:0.3;cursor:not-allowed}
+        .time-slot.unavailable:hover{background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.08)}
     </style>
 </head>
 <body>
@@ -70,15 +76,16 @@
                 <option value="">בחר שירות...</option>
             </select>
         </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>תאריך <span class="req">*</span></label>
-                <input type="date" id="appointmentDate" required />
+        <div class="form-group">
+            <label>תאריך <span class="req">*</span></label>
+            <input type="date" id="appointmentDate" required />
+        </div>
+        <div class="form-group">
+            <label>שעה <span class="req">*</span></label>
+            <div id="timeSlotsContainer">
+                <div style="text-align:center;padding:10px;color:rgba(255,255,255,0.4);">📅 בחר תאריך תחילה</div>
             </div>
-            <div class="form-group">
-                <label>שעה <span class="req">*</span></label>
-                <input type="time" id="appointmentTime" required />
-            </div>
+            <input type="hidden" id="selectedTime" required />
         </div>
         <button type="submit" class="btn" id="bookBtn">📅 קבע תור</button>
     </form>
@@ -103,6 +110,7 @@
     let services = [];
     let existingAppointments = [];
     let businessHours = [];
+    let selectedSlot = null;
 
     // ================================================
     // שליפת נתוני העסק
@@ -174,6 +182,8 @@
     async function loadBusinessHours() {
         if (!businessId) return;
 
+        console.log('🕐 טוען שעות עבודה לעסק:', businessId);
+
         const { data, error } = await sb
             .from('business_hours')
             .select('*')
@@ -185,60 +195,12 @@
         }
 
         businessHours = data || [];
-        console.log('🕐 שעות עבודה:', businessHours);
-    }
-
-    // ================================================
-    // בדיקת זמינות מתקדמת - כולל שעות עבודה
-    // ================================================
-    async function checkAvailability(startTime, endTime, employeeId = null) {
-        const date = new Date(startTime);
-        const dayOfWeek = date.getDay(); // 0=ראשון, 6=שבת
-        const timeStr = date.toTimeString().slice(0, 5); // HH:MM
-
-        // 1. בדיקת חגים
-        const dateStr = date.toISOString().split('T')[0];
-        const { data: holidays } = await sb
-            .from('holidays')
-            .select('*')
-            .eq('business_id', businessId)
-            .eq('holiday_date', dateStr)
-            .eq('is_closed', true);
-
-        if (holidays && holidays.length > 0) {
-            return { available: false, reason: '🏖️ העסק סגור בחג זה' };
+        console.log('🕐 שעות עבודה שנטענו:', businessHours);
+        
+        if (businessHours.length === 0) {
+            console.log('⚠️ אין שעות עבודה - צריך להגדיר');
+            showAlert('⚠️ העסק עדיין לא הגדיר שעות עבודה', 'error');
         }
-
-        // 2. בדיקת שעות עבודה
-        const dayHours = businessHours.find(h => h.day_of_week === dayOfWeek);
-
-        if (!dayHours || dayHours.is_open === false) {
-            return { available: false, reason: '⏰ העסק סגור ביום זה' };
-        }
-
-        // בדיקה אם השעה בגדר שעות הפתיחה
-        if (timeStr < dayHours.open_time || timeStr > dayHours.close_time) {
-            return { 
-                available: false, 
-                reason: `⏰ שעות פעילות: ${dayHours.open_time} - ${dayHours.close_time}` 
-            };
-        }
-
-        // 3. בדיקת התנגשות תורים
-        const { data: conflicts } = await sb
-            .from('appointments')
-            .select('*')
-            .eq('business_id', businessId)
-            .not('status', 'eq', 'cancelled')
-            .or(`employee_id.eq.${employeeId || ''},employee_id.is.null`)
-            .filter('start_time', 'lt', endTime)
-            .filter('end_time', 'gt', startTime);
-
-        if (conflicts && conflicts.length > 0) {
-            return { available: false, reason: '❌ השעה תפוסה' };
-        }
-
-        return { available: true };
     }
 
     // ================================================
@@ -305,6 +267,133 @@
     }
 
     // ================================================
+    // בדיקת זמינות
+    // ================================================
+    async function checkAvailability(startTime, endTime) {
+        const date = new Date(startTime);
+        const dayOfWeek = date.getDay();
+        const timeStr = date.toTimeString().slice(0, 5);
+
+        // בדיקת שעות עבודה
+        const dayHours = businessHours.find(h => h.day_of_week === dayOfWeek);
+        if (!dayHours || dayHours.is_open === false) {
+            return { available: false, reason: '⏰ העסק סגור ביום זה' };
+        }
+        if (timeStr < dayHours.open_time || timeStr > dayHours.close_time) {
+            return { 
+                available: false, 
+                reason: `⏰ שעות פעילות: ${dayHours.open_time} - ${dayHours.close_time}` 
+            };
+        }
+
+        // בדיקת התנגשות
+        const { data: conflicts } = await sb
+            .from('appointments')
+            .select('*')
+            .eq('business_id', businessId)
+            .not('status', 'eq', 'cancelled')
+            .filter('start_time', 'lt', endTime)
+            .filter('end_time', 'gt', startTime);
+
+        if (conflicts && conflicts.length > 0) {
+            return { available: false, reason: '❌ השעה תפוסה' };
+        }
+
+        return { available: true };
+    }
+
+    // ================================================
+    // יצירת תפריט שעות
+    // ================================================
+    function generateTimeSlots(date) {
+        const container = document.getElementById('timeSlotsContainer');
+        const dayOfWeek = new Date(date + 'T00:00:00').getDay();
+        const dayHours = businessHours.find(h => h.day_of_week === dayOfWeek);
+
+        if (!dayHours || dayHours.is_open === false) {
+            container.innerHTML = `<div style="text-align:center;padding:20px;color:#f5576c;">⏰ העסק סגור ביום זה</div>`;
+            return;
+        }
+
+        // יצירת שעות מ-09:00 עד 18:00 במרווחים של 30 דקות
+        const startHour = parseInt(dayHours.open_time.split(':')[0]);
+        const startMinute = parseInt(dayHours.open_time.split(':')[1]);
+        const endHour = parseInt(dayHours.close_time.split(':')[0]);
+        const endMinute = parseInt(dayHours.close_time.split(':')[1]);
+
+        const slots = [];
+        let currentHour = startHour;
+        let currentMinute = startMinute;
+
+        while (currentHour < endHour || (currentHour === endHour && currentMinute < endMinute)) {
+            const timeStr = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
+            slots.push(timeStr);
+            
+            currentMinute += 30;
+            if (currentMinute >= 60) {
+                currentHour++;
+                currentMinute = 0;
+            }
+        }
+
+        // הוספת 30 דקות אחרונות
+        const lastSlot = `${String(endHour).padStart(2, '0')}:${String(endMinute - 30).padStart(2, '0')}`;
+        if (!slots.includes(lastSlot) && endMinute >= 30) {
+            slots.push(lastSlot);
+        }
+
+        if (slots.length === 0) {
+            container.innerHTML = `<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.4);">⏰ אין שעות זמינות</div>`;
+            return;
+        }
+
+        let html = '<div class="time-slot-grid">';
+        slots.forEach(time => {
+            const isSelected = selectedSlot === time;
+            html += `
+                <div class="time-slot ${isSelected ? 'selected' : ''}" 
+                     onclick="selectTimeSlot('${time}')"
+                     data-time="${time}">
+                    ${time}
+                </div>
+            `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    // ================================================
+    // בחירת שעה
+    // ================================================
+    window.selectTimeSlot = function(time) {
+        selectedSlot = time;
+        document.getElementById('selectedTime').value = time;
+        
+        // עדכון ויזואלי
+        document.querySelectorAll('.time-slot').forEach(el => {
+            el.classList.remove('selected');
+            if (el.dataset.time === time) {
+                el.classList.add('selected');
+            }
+        });
+    };
+
+    // ================================================
+    // אירוע שינוי תאריך
+    // ================================================
+    document.getElementById('appointmentDate').addEventListener('change', function() {
+        selectedSlot = null;
+        document.getElementById('selectedTime').value = '';
+        const date = this.value;
+        if (date) {
+            generateTimeSlots(date);
+        } else {
+            document.getElementById('timeSlotsContainer').innerHTML = 
+                '<div style="text-align:center;padding:10px;color:rgba(255,255,255,0.4);">📅 בחר תאריך תחילה</div>';
+        }
+    });
+
+    // ================================================
     // הודעות
     // ================================================
     function showAlert(msg, type = 'error') {
@@ -336,27 +425,6 @@
     }
 
     // ================================================
-    // עדכון שעות זמינות - הגבלה לשעות העבודה
-    // ================================================
-    document.getElementById('appointmentDate').addEventListener('change', function() {
-        const date = this.value;
-        const dayOfWeek = new Date(date + 'T00:00:00').getDay();
-        const dayHours = businessHours.find(h => h.day_of_week === dayOfWeek);
-        
-        const timeInput = document.getElementById('appointmentTime');
-        if (dayHours && dayHours.is_open) {
-            timeInput.min = dayHours.open_time;
-            timeInput.max = dayHours.close_time;
-            timeInput.placeholder = `${dayHours.open_time} - ${dayHours.close_time}`;
-        } else {
-            timeInput.min = '';
-            timeInput.max = '';
-            timeInput.placeholder = 'יום סגור';
-            showAlert('⏰ העסק סגור ביום זה', 'error');
-        }
-    });
-
-    // ================================================
     // שליחת הטופס
     // ================================================
     document.getElementById('bookingForm').addEventListener('submit', async (e) => {
@@ -367,7 +435,7 @@
         const phone = document.getElementById('customerPhone').value.trim();
         const serviceId = document.getElementById('serviceId').value;
         const date = document.getElementById('appointmentDate').value;
-        const time = document.getElementById('appointmentTime').value;
+        const time = document.getElementById('selectedTime').value;
 
         if (!name) { showAlert('❌ יש להכניס שם', 'error'); return; }
         if (!phone) { showAlert('❌ יש להכניס טלפון', 'error'); return; }
