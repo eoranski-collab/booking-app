@@ -111,6 +111,7 @@
     let existingAppointments = [];
     let businessHours = [];
     let selectedSlot = null;
+    const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
     // ================================================
     // שליפת נתוני העסק
@@ -196,6 +197,7 @@
 
         businessHours = data || [];
         console.log('🕐 שעות עבודה שנטענו:', businessHours);
+        console.log('📋 פירוט ימים:', businessHours.map(h => `${DAYS[h.day_of_week]}: ${h.is_open ? 'פתוח' : 'סגור'}`).join(', '));
         
         if (businessHours.length === 0) {
             console.log('⚠️ אין שעות עבודה - צריך להגדיר');
@@ -308,14 +310,23 @@
     function generateTimeSlots(date) {
         const container = document.getElementById('timeSlotsContainer');
         const dayOfWeek = new Date(date + 'T00:00:00').getDay();
+        
+        console.log('📅 תאריך שנבחר:', date);
+        console.log('📅 יום בשבוע (JS):', dayOfWeek, '=', DAYS[dayOfWeek]);
+        console.log('📋 שעות עבודה זמינות:', businessHours);
+        
         const dayHours = businessHours.find(h => h.day_of_week === dayOfWeek);
 
         if (!dayHours || dayHours.is_open === false) {
-            container.innerHTML = `<div style="text-align:center;padding:20px;color:#f5576c;">⏰ העסק סגור ביום זה</div>`;
+            const reason = !dayHours ? 'לא הוגדר' : 'סגור';
+            container.innerHTML = `<div style="text-align:center;padding:20px;color:#f5576c;">⏰ העסק סגור ביום זה (${reason})</div>`;
             return;
         }
 
-        // יצירת שעות מ-09:00 עד 18:00 במרווחים של 30 דקות
+        console.log('✅ שעות עבודה שנמצאו:', dayHours);
+        console.log('🕐 פתיחה:', dayHours.open_time, 'סגירה:', dayHours.close_time);
+
+        // יצירת שעות
         const startHour = parseInt(dayHours.open_time.split(':')[0]);
         const startMinute = parseInt(dayHours.open_time.split(':')[1]);
         const endHour = parseInt(dayHours.close_time.split(':')[0]);
@@ -341,6 +352,8 @@
         if (!slots.includes(lastSlot) && endMinute >= 30) {
             slots.push(lastSlot);
         }
+
+        console.log('🕐 שעות זמינות:', slots);
 
         if (slots.length === 0) {
             container.innerHTML = `<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.4);">⏰ אין שעות זמינות</div>`;
@@ -369,7 +382,6 @@
         selectedSlot = time;
         document.getElementById('selectedTime').value = time;
         
-        // עדכון ויזואלי
         document.querySelectorAll('.time-slot').forEach(el => {
             el.classList.remove('selected');
             if (el.dataset.time === time) {
@@ -449,7 +461,6 @@
         const startTime = new Date(`${date}T${time}:00`);
         const endTime = new Date(startTime.getTime() + service.duration_minutes * 60000);
 
-        // בדיקת זמינות
         const availability = await checkAvailability(
             startTime.toISOString(), 
             endTime.toISOString()
