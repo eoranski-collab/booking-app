@@ -16,6 +16,16 @@
         .btn-logout{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);padding:6px 16px;border-radius:30px;cursor:pointer;font-family:'Heebo',sans-serif;transition:all 0.3s}
         .btn-logout:hover{background:rgba(245,87,108,0.2);border-color:#f5576c;color:#fff}
         .container{max-width:1200px;margin:0 auto;padding:20px}
+        
+        /* קישור ייחודי */
+        .unique-link-box{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px 20px;margin-bottom:24px}
+        .unique-link-box .label{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:6px}
+        .unique-link-box .link-wrapper{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+        .unique-link-box .link-wrapper code{background:rgba(255,255,255,0.06);padding:8px 14px;border-radius:8px;font-size:13px;color:#fff;word-break:break-all;flex:1;min-width:200px;font-family:monospace;direction:ltr;text-align:left}
+        .unique-link-box .link-wrapper .btn-copy{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);padding:6px 16px;border-radius:30px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:13px;transition:all 0.3s}
+        .unique-link-box .link-wrapper .btn-copy:hover{background:rgba(245,87,108,0.15);border-color:#f5576c;color:#fff}
+        .unique-link-box .hint{font-size:12px;color:rgba(255,255,255,0.3);margin-top:6px}
+        
         .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:30px}
         .stat-card{background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;text-align:center}
         .stat-card .number{font-size:32px;font-weight:900;background:linear-gradient(135deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
@@ -72,6 +82,16 @@
     <!-- MAIN -->
     <div class="container">
 
+        <!-- ✅ קישור ייחודי ללקוחות -->
+        <div class="unique-link-box" id="uniqueLinkBox" style="display:none;">
+            <div class="label">📋 קישור ייחודי לעסק שלך - שלח ללקוחות:</div>
+            <div class="link-wrapper">
+                <code id="clientLink">טוען...</code>
+                <button class="btn-copy" onclick="copyLink()">📋 העתק</button>
+            </div>
+            <div class="hint">💡 הלקוחות יכנסו לקישור הזה ויקבעו תור ישירות לעסק שלך</div>
+        </div>
+
         <div class="stats">
             <div class="stat-card"><div class="number" id="todayCount">0</div><div class="label">📅 תורים היום</div></div>
             <div class="stat-card"><div class="number" id="pendingCount">0</div><div class="label">⏳ ממתינים</div></div>
@@ -111,7 +131,6 @@
         async function checkAuth() {
             const { data: { user }, error } = await sb.auth.getUser();
             if (error || !user) {
-                // אין משתמש - מעבר להתחברות
                 window.location.href = 'login.html';
                 return null;
             }
@@ -134,6 +153,7 @@
                 // שליפת שם העסק
                 const { data: biz } = await sb.from('businesses').select('name').eq('id', BUSINESS_ID).maybeSingle();
                 if (biz) document.getElementById('bizName').textContent = biz.name;
+                updateClientLink();
                 return;
             }
 
@@ -151,6 +171,7 @@
 
                 // עדכן את users
                 await sb.from('users').update({ business_id: BUSINESS_ID }).eq('id', user.id);
+                updateClientLink();
                 return;
             }
 
@@ -164,6 +185,7 @@
                 BUSINESS_ID = allBiz[0].id;
                 console.log('✅ עסק ראשון:', allBiz[0].name);
                 document.getElementById('bizName').textContent = allBiz[0].name;
+                updateClientLink();
                 return;
             }
 
@@ -176,6 +198,47 @@
                     <button class="btn-primary" onclick="window.location.href='register.html'" style="width:auto;padding:10px 24px;margin-top:16px;">📝 הרשם עסק</button>
                     </div>
                 `;
+        }
+
+        // ===== קישור ייחודי ללקוחות =====
+        function updateClientLink() {
+            const box = document.getElementById('uniqueLinkBox');
+            const linkEl = document.getElementById('clientLink');
+            if (BUSINESS_ID) {
+                const url = window.location.origin + window.location.pathname.replace('dashboard.html', 'client.html') +
+                    '?business=' + BUSINESS_ID;
+                linkEl.textContent = url;
+                linkEl.dataset.url = url;
+                box.style.display = 'block';
+            }
+        }
+
+        window.copyLink = function() {
+            const linkEl = document.getElementById('clientLink');
+            const url = linkEl.dataset.url || linkEl.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(() => {
+                    alert('✅ הקישור הועתק! שלח אותו ללקוחות שלך.');
+                }).catch(() => {
+                    fallbackCopy(url);
+                });
+            } else {
+                fallbackCopy(url);
+            }
+        };
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert('✅ הקישור הועתק! שלח אותו ללקוחות שלך.');
+            } catch (err) {
+                alert('❌ לא הצלחנו להעתיק. העתק ידנית: ' + text);
+            }
+            textArea.remove();
         }
 
         // ===== טעינת נתונים =====
