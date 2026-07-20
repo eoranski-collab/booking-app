@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MyCut - דשבורד</title>
-    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&display=swap" rel="stylesheet" />
     <style>
+        /* ... (כל הסגנונות נשארים אותו דבר - אפשר להשאיר את מה שהיה) ... */
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Heebo',sans-serif;background:#0f0c29;color:#fff;direction:rtl;min-height:100vh}
         .header{background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.06);padding:16px 30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
@@ -46,7 +46,6 @@
         .btn-sm{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);padding:4px 12px;border-radius:30px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:12px;transition:all 0.3s}
         .btn-sm:hover{background:rgba(245,87,108,0.15);border-color:#f5576c;color:#fff}
         .btn-sm.danger:hover{background:rgba(245,87,108,0.25)}
-        /* ✅ כפתור וואטסאפ */
         .btn-whatsapp{background:#25D366;color:#fff;padding:4px 12px;border-radius:30px;text-decoration:none;font-size:12px;display:inline-flex;align-items:center;gap:4px;transition:all 0.3s;border:none;cursor:pointer;font-family:'Heebo',sans-serif;font-weight:500}
         .btn-whatsapp:hover{background:#1da851;transform:scale(1.05)}
         .btn-primary{background:linear-gradient(135deg,#f093fb,#f5576c);border:none;color:#fff;padding:14px 32px;border-radius:30px;font-family:'Heebo',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.3s;box-shadow:0 8px 30px rgba(245,87,108,0.3)}
@@ -120,7 +119,7 @@
     </script>
     <script>
         // ================================================
-        // קוד ראשי
+        // ✅ קוד פשוט ומתוקן
         // ================================================
         const SUPABASE_URL = 'https://bcbnvtszkfjhfujnxldm.supabase.co';
         const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';
@@ -135,72 +134,116 @@
         let holidays = [];
         const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
-        // ===== התחברות =====
-        async function checkAuth() {
-            const { data: { user } } = await sb.auth.getUser();
-            if (!user) { window.location.href = 'login.html'; return null; }
-            return user;
-        }
+        // ===== בדיקת משתמש =====
+        async function init() {
+            try {
+                // 1. בדיקה אם מחובר
+                const { data: { user } } = await sb.auth.getUser();
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                console.log('✅ מחובר:', user.email);
 
-        // ===== מציאת עסק =====
-        async function findBusiness(user) {
-            const { data: userData } = await sb.from('users').select('business_id').eq('id', user.id).maybeSingle();
-            if (userData?.business_id) { BUSINESS_ID = userData.business_id; const { data: biz } = await sb.from(
-                    'businesses').select('name').eq('id', BUSINESS_ID).maybeSingle(); if (biz) document.getElementById(
-                    'bizName').textContent = biz.name;
-                updateClientLink(); return; }
-            const { data: bizData } = await sb.from('businesses').select('id, name').eq('email', user.email).maybeSingle();
-            if (bizData) { BUSINESS_ID = bizData.id;
-                document.getElementById('bizName').textContent = bizData.name;
-                await sb.from('users').update({ business_id: BUSINESS_ID }).eq('id', user.id);
-                updateClientLink(); return; }
-            const { data: allBiz } = await sb.from('businesses').select('id, name').limit(1);
-            if (allBiz && allBiz.length > 0) { BUSINESS_ID = allBiz[0].id;
-                document.getElementById('bizName').textContent = allBiz[0].name;
-                updateClientLink(); return; }
-            document.getElementById('bizName').textContent = '❌ לא נמצא עסק';
-        }
+                // 2. מציאת העסק
+                // נסה קודם מה-Local Storage
+                const savedId = localStorage.getItem('businessId');
+                if (savedId) {
+                    BUSINESS_ID = savedId;
+                    console.log('✅ עסק מ-Local Storage:', BUSINESS_ID);
+                }
 
-        function updateClientLink() {
-            const box = document.getElementById('uniqueLinkBox');
-            const linkEl = document.getElementById('clientLink');
-            if (BUSINESS_ID) {
+                // אם אין ב-Local Storage, חפש
+                if (!BUSINESS_ID) {
+                    // חפש ב-users
+                    const { data: userData } = await sb
+                        .from('users')
+                        .select('business_id')
+                        .eq('id', user.id)
+                        .maybeSingle();
+
+                    if (userData?.business_id) {
+                        BUSINESS_ID = userData.business_id;
+                        localStorage.setItem('businessId', BUSINESS_ID);
+                        console.log('✅ עסק נמצא ב-users:', BUSINESS_ID);
+                    } else {
+                        // חפש לפי אימייל
+                        const { data: biz } = await sb
+                            .from('businesses')
+                            .select('id, name')
+                            .eq('email', user.email)
+                            .maybeSingle();
+
+                        if (biz) {
+                            BUSINESS_ID = biz.id;
+                            localStorage.setItem('businessId', BUSINESS_ID);
+                            document.getElementById('bizName').textContent = biz.name;
+                            console.log('✅ עסק נמצא לפי אימייל:', biz.name);
+                            
+                            // עדכן את users
+                            await sb.from('users').update({ business_id: BUSINESS_ID }).eq('id', user.id);
+                        }
+                    }
+                }
+
+                // אם עדיין אין - קח עסק ראשון
+                if (!BUSINESS_ID) {
+                    const { data: first } = await sb.from('businesses').select('id, name').limit(1);
+                    if (first && first.length > 0) {
+                        BUSINESS_ID = first[0].id;
+                        localStorage.setItem('businessId', BUSINESS_ID);
+                        document.getElementById('bizName').textContent = first[0].name;
+                        console.log('✅ עסק ראשון:', first[0].name);
+                    }
+                }
+
+                if (!BUSINESS_ID) {
+                    document.getElementById('bizName').textContent = '❌ לא נמצא עסק';
+                    document.getElementById('tabContent').innerHTML =
+                        `<div class="empty"><div class="icon">❌</div><h3>לא נמצא עסק</h3><button class="btn-primary" onclick="window.location.href='register.html'" style="width:auto;padding:10px 24px;margin-top:16px;">📝 הרשם עסק</button></div>`;
+                    return;
+                }
+
+                // הצגת שם העסק
+                const { data: bizName } = await sb.from('businesses').select('name').eq('id', BUSINESS_ID).maybeSingle();
+                if (bizName) document.getElementById('bizName').textContent = bizName.name;
+
+                // קישור ייחודי
+                const linkEl = document.getElementById('clientLink');
                 const url = window.location.origin + window.location.pathname.replace('dashboard.html', 'client.html') +
                     '?business=' + BUSINESS_ID;
                 linkEl.textContent = url;
-                linkEl.dataset.url = url;
-                box.style.display = 'block';
+                document.getElementById('uniqueLinkBox').style.display = 'block';
+
+                // טעינת נתונים
+                await loadData();
+                switchTab('today');
+
+            } catch (err) {
+                console.error('❌ שגיאה:', err);
+                document.getElementById('tabContent').innerHTML = `<div class="empty"><div class="icon">❌</div><p>${err.message}</p></div>`;
             }
         }
-
-        window.copyLink = function() {
-            const linkEl = document.getElementById('clientLink');
-            const url = linkEl.dataset.url || linkEl.textContent;
-            navigator.clipboard.writeText(url).then(() => alert('✅ הקישור הועתק!')).catch(() => {
-                const ta = document.createElement('textarea');
-                ta.value = url;
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand('copy');
-                ta.remove();
-                alert('✅ הקישור הועתק!');
-            });
-        };
 
         // ===== טעינת נתונים =====
         async function loadData() {
             if (!BUSINESS_ID) return;
+
             const { data: apps } = await sb.from('appointments').select('*').eq('business_id', BUSINESS_ID).order(
-                'start_time', { ascending: true });
+            'start_time');
             appointments = apps || [];
+
             const { data: servs } = await sb.from('services').select('*').eq('business_id', BUSINESS_ID).eq('is_active',
                 true);
             services = servs || [];
+
             const { data: emps } = await sb.from('employees').select('*').eq('business_id', BUSINESS_ID).eq('is_active',
                 true);
             employees = emps || [];
+
             const { data: hours } = await sb.from('business_hours').select('*').eq('business_id', BUSINESS_ID);
             businessHours = hours || [];
+
             const { data: hols } = await sb.from('holidays').select('*').eq('business_id', BUSINESS_ID);
             holidays = hols || [];
 
@@ -211,6 +254,8 @@
             document.getElementById('pendingCount').textContent = appointments.filter(a => a.status === 'pending').length;
             document.getElementById('customersCount').textContent = appointments.filter(a => a.customer_name).length;
             document.getElementById('servicesCount').textContent = services.length;
+
+            console.log('📊 נטען:', appointments.length, 'תורים,', services.length, 'שירותים');
         }
 
         // ===== פונקציות עזר =====
@@ -229,7 +274,7 @@
             return map[s] || '';
         }
 
-        // ===== ✅ קישור וואטסאפ =====
+        // ===== קישור וואטסאפ =====
         function getWhatsAppLink(phone, name, service, date, time) {
             if (!phone) return '#';
             const cleanPhone = phone.replace(/^0/, '');
@@ -238,13 +283,12 @@
             return `https://wa.me/972${cleanPhone}?text=${encodedMessage}`;
         }
 
-        // ===== רנדר =====
+        // ===== תצוגת טאבים =====
         function renderToday() {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const items = appointments.filter(a => new Date(a.start_time) >= today);
             if (!items.length) return `<div class="empty"><div class="icon">📭</div><p>אין תורים להיום</p></div>`;
-
             return items.map(a => {
                 const waLink = getWhatsAppLink(a.customer_phone, a.customer_name, a.service_name, formatDate(a
                     .start_time), formatTime(a.start_time));
@@ -268,7 +312,6 @@
 
         function renderAll() {
             if (!appointments.length) return `<div class="empty"><div class="icon">📭</div><p>אין תורים</p></div>`;
-
             return appointments.map(a => {
                 const waLink = getWhatsAppLink(a.customer_phone, a.customer_name, a.service_name, formatDate(a
                     .start_time), formatTime(a.start_time));
@@ -356,83 +399,4 @@
             const { error } = await sb.from('appointments').insert([{
                 business_id: BUSINESS_ID,
                 customer_name: name,
-                customer_phone: phone,
-                service_id: serviceId,
-                service_name: service.name,
-                employee_id: employeeId,
-                start_time: start.toISOString(),
-                end_time: end.toISOString(),
-                price: service.price,
-                status: 'confirmed'
-            }]);
-            if (error) { alert('❌ ' + error.message); return; }
-            alert('✅ תור נוצר!');
-            await loadData();
-            switchTab('today');
-        };
-
-        window.cancelApp = async function(id) {
-            if (!confirm('לבטל תור?')) return;
-            const { error } = await sb.from('appointments').update({ status: 'cancelled' }).eq('id', id);
-            if (error) { alert('❌ ' + error.message); return; }
-            alert('✅ בוטל!');
-            await loadData();
-            switchTab('today');
-        };
-
-        window.addService = async function() {
-            const name = prompt('📝 שם השירות:');
-            if (!name) return;
-            const duration = parseInt(prompt('⏱️ משך (דקות):'));
-            if (!duration) return;
-            const price = parseFloat(prompt('💰 מחיר (ש"ח):'));
-            if (!price) return;
-            const { error } = await sb.from('services').insert([{
-                business_id: BUSINESS_ID,
-                name: name,
-                duration_minutes: duration,
-                price: price,
-                is_active: true
-            }]);
-            if (error) { alert('❌ ' + error.message); return; }
-            alert('✅ שירות נוסף!');
-            await loadData();
-            switchTab('services');
-        };
-
-        window.deleteService = async function(id) {
-            if (!confirm('למחוק שירות?')) return;
-            const { error } = await sb.from('services').update({ is_active: false }).eq('id', id);
-            if (error) { alert('❌ ' + error.message); return; }
-            alert('✅ נמחק!');
-            await loadData();
-            switchTab('services');
-        };
-
-        window.addEmployee = async function() {
-            const name = prompt('📝 שם העובד:');
-            if (!name) return;
-            const phone = prompt('📞 טלפון:');
-            if (!phone) return;
-            const { error } = await sb.from('employees').insert([{ business_id: BUSINESS_ID, name, phone, is_active: true }]);
-            if (error) { alert('❌ ' + error.message); return; }
-            alert('✅ עובד נוסף!');
-            await loadData();
-            switchTab('employees');
-        };
-
-        window.deleteEmployee = async function(id) {
-            if (!confirm('למחוק עובד?')) return;
-            const { error } = await sb.from('employees').update({ is_active: false }).eq('id', id);
-            if (error) { alert('❌ ' + error.message); return; }
-            alert('✅ נמחק!');
-            await loadData();
-            switchTab('employees');
-        };
-
-        window.addHoliday = async function() {
-            const date = prompt('📅 תאריך (YYYY-MM-DD):');
-            if (!date) return;
-            const name = prompt('📝 שם החג:');
-            if (!name) return;
-            const { error } = await sb.from('
+                customer_
