@@ -6,121 +6,69 @@
     <title>MyCut - דשבורד</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Heebo',sans-serif;background:#0f0c29;color:#fff;direction:rtl;min-height:100vh}
-        .header{background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.06);padding:16px 30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
-        .header .logo{font-size:22px;font-weight:900}
-        .header .logo span{background:linear-gradient(135deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-        .header .user-area{display:flex;align-items:center;gap:16px;font-size:14px;color:rgba(255,255,255,0.6)}
-        .header .user-area .name{color:#fff;font-weight:600}
-        .btn-logout{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);padding:6px 16px;border-radius:30px;cursor:pointer;font-family:'Heebo',sans-serif;transition:all 0.3s}
-        .btn-logout:hover{background:rgba(245,87,108,0.2);border-color:#f5576c;color:#fff}
-        .container{max-width:1200px;margin:0 auto;padding:20px}
-        .unique-link-box{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px 20px;margin-bottom:24px}
-        .unique-link-box .label{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:6px}
-        .unique-link-box .link-wrapper{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-        .unique-link-box .link-wrapper code{background:rgba(255,255,255,0.06);padding:8px 14px;border-radius:8px;font-size:13px;color:#fff;word-break:break-all;flex:1;min-width:200px;font-family:monospace;direction:ltr;text-align:left}
-        .unique-link-box .link-wrapper .btn-copy{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);padding:6px 16px;border-radius:30px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:13px;transition:all 0.3s}
-        .unique-link-box .link-wrapper .btn-copy:hover{background:rgba(245,87,108,0.15);border-color:#f5576c;color:#fff}
-        .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:30px}
-        .stat-card{background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:20px;text-align:center}
-        .stat-card .number{font-size:32px;font-weight:900;background:linear-gradient(135deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-        .stat-card .label{font-size:13px;color:rgba(255,255,255,0.4);margin-top:4px}
-        .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
-        .tab{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);padding:10px 22px;border-radius:30px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:14px;font-weight:500;transition:all 0.3s}
-        .tab:hover{background:rgba(255,255,255,0.08);color:#fff}
-        .tab.active{background:linear-gradient(135deg,#f093fb,#f5576c);border-color:transparent;color:#fff;box-shadow:0 8px 30px rgba(245,87,108,0.3)}
-        .content{background:rgba(255,255,255,0.03);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.05);border-radius:20px;padding:24px;min-height:300px}
-        .empty{text-align:center;padding:50px 20px;color:rgba(255,255,255,0.3)}
-        .empty .icon{font-size:48px;margin-bottom:12px}
-        .item{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.05);flex-wrap:wrap;gap:10px}
-        .item:last-child{border-bottom:none}
-        .item .info .name{font-weight:600;font-size:16px}
-        .item .info .details{font-size:13px;color:rgba(255,255,255,0.4);margin-top:2px}
-        .item .actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-        .badge{padding:4px 14px;border-radius:30px;font-size:12px;font-weight:600}
-        .badge-pending{background:rgba(255,193,7,0.2);color:#ffc107}
-        .badge-confirmed{background:rgba(72,187,120,0.2);color:#48bb78}
-        .badge-cancelled{background:rgba(245,87,108,0.2);color:#f5576c}
-        .badge-completed{background:rgba(66,153,225,0.2);color:#4299e1}
-        .btn-sm{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.6);padding:4px 12px;border-radius:30px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:12px;transition:all 0.3s}
-        .btn-sm:hover{background:rgba(245,87,108,0.15);border-color:#f5576c;color:#fff}
-        .btn-sm.danger:hover{background:rgba(245,87,108,0.25)}
-        .btn-whatsapp{background:#25D366;color:#fff;padding:4px 12px;border-radius:30px;text-decoration:none;font-size:12px;display:inline-flex;align-items:center;gap:4px;transition:all 0.3s;border:none;cursor:pointer;font-family:'Heebo',sans-serif;font-weight:500}
-        .btn-whatsapp:hover{background:#1da851;transform:scale(1.05)}
-        .btn-primary{background:linear-gradient(135deg,#f093fb,#f5576c);border:none;color:#fff;padding:14px 32px;border-radius:30px;font-family:'Heebo',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.3s;box-shadow:0 8px 30px rgba(245,87,108,0.3)}
-        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(245,87,108,0.5)}
-        .btn-primary:disabled{opacity:0.6;cursor:not-allowed;transform:none}
-        .btn-secondary{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:30px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:13px;transition:all 0.3s;display:inline-block;margin-top:8px}
-        .btn-secondary:hover{background:rgba(245,87,108,0.15);border-color:#f5576c;color:#fff}
-        .form-group{margin-bottom:16px}
-        .form-group label{display:block;font-size:13px;font-weight:600;color:rgba(255,255,255,0.6);margin-bottom:4px}
-        .form-group input,.form-group select{width:100%;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;color:#fff;font-family:'Heebo',sans-serif;font-size:14px;transition:all 0.3s;outline:none}
-        .form-group input:focus,.form-group select:focus{border-color:#f5576c;background:rgba(255,255,255,0.08);box-shadow:0 0 0 3px rgba(245,87,108,0.1)}
-        .form-group select option{background:#1a1a2e;color:#fff}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-        @media(max-width:600px){.form-row{grid-template-columns:1fr}}
-        .spinner{display:inline-block;width:20px;height:20px;border:2px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle;margin-left:8px}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        .service-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
-        .service-item:last-child{border-bottom:none}
-        .hours-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
-        .hours-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px 16px}
-        .hours-card .day{font-weight:600;font-size:14px}
-        .hours-card .time{font-size:13px;color:rgba(255,255,255,0.5)}
-        .hours-card .closed{color:#f5576c;font-weight:500}
-        .whatsapp-setting{background:rgba(255,255,255,0.04);padding:20px;border-radius:16px;margin-bottom:16px}
-        .whatsapp-setting input{width:100%;padding:12px;border-radius:8px;border:none;font-size:16px}
-        @media(max-width:768px){.header{padding:12px 16px}.container{padding:12px}.stats{grid-template-columns:1fr 1fr}.content{padding:16px}}
-        @media(max-width:480px){.stats{grid-template-columns:1fr}.item{flex-direction:column;align-items:stretch}.item .actions{justify-content:flex-start;flex-wrap:wrap}}
+        body{font-family:Arial;background:#0f0c29;color:#fff;direction:rtl;padding:20px}
+        .card{background:rgba(255,255,255,0.05);border-radius:16px;padding:20px;margin-bottom:16px}
+        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+        .stat{background:rgba(255,255,255,0.05);padding:16px;border-radius:12px;text-align:center}
+        .stat .num{font-size:28px;font-weight:bold;color:#f5576c}
+        .btn{background:#f5576c;border:none;color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;margin:4px}
+        .btn:hover{opacity:0.8}
+        .tab{background:rgba(255,255,255,0.05);border:none;color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;margin:4px}
+        .tab.active{background:#f5576c}
+        .item{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid rgba(255,255,255,0.05)}
+        input,select{width:100%;padding:10px;border-radius:8px;border:none;margin:4px 0}
+        .link-box{background:rgba(255,255,255,0.04);padding:12px;border-radius:12px;margin-bottom:16px}
+        .link-box code{background:rgba(255,255,255,0.06);padding:6px 12px;border-radius:6px;display:block;font-size:13px;word-break:break-all}
+        .btn-whatsapp{background:#25D366;color:#fff;padding:4px 12px;border-radius:20px;text-decoration:none;font-size:12px;display:inline-block;margin:2px}
+        .btn-whatsapp:hover{background:#1da851}
+        .error{color:#f5576c;text-align:center;padding:40px}
+        .badge{padding:4px 12px;border-radius:20px;font-size:12px;display:inline-block}
+        .badge-pending{background:#ffc10733;color:#ffc107}
+        .badge-confirmed{background:#48bb7822;color:#48bb78}
+        .badge-cancelled{background:#f5576c33;color:#f5576c}
+        .badge-completed{background:#4299e133;color:#4299e1}
     </style>
 </head>
 <body>
 
-    <header class="header">
-        <div class="logo">✂️ <span>MyCut</span></div>
-        <div class="user-area">
-            <span>👋 שלום, <span class="name" id="bizName">טוען...</span></span>
-            <button class="btn-logout" onclick="logout()"> התנתק</button>
-        </div>
-    </header>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+        <h1>✂️ MyCut</h1>
+        <button class="btn" onclick="logout()" style="background:#333;">התנתק</button>
+    </div>
+    <div id="bizName" style="color:#aaa;margin-bottom:10px;">טוען...</div>
 
-    <div class="container">
+    <!-- קישור ייחודי -->
+    <div class="link-box" id="linkBox" style="display:none;">
+        <div style="font-size:13px;color:rgba(255,255,255,0.4);">📋 קישור ללקוחות:</div>
+        <code id="clientLink">טוען...</code>
+        <button class="btn" onclick="copyLink()" style="padding:4px 12px;font-size:12px;background:#333;margin-top:6px;">📋 העתק</button>
+    </div>
 
-        <div class="unique-link-box" id="uniqueLinkBox" style="display:none;">
-            <div class="label">📋 קישור ייחודי לעסק שלך - שלח ללקוחות:</div>
-            <div class="link-wrapper">
-                <code id="clientLink">טוען...</code>
-                <button class="btn-copy" onclick="copyLink()">📋 העתק</button>
-            </div>
-        </div>
+    <div class="stats">
+        <div class="stat"><div class="num" id="todayCount">0</div><div>📅 תורים היום</div></div>
+        <div class="stat"><div class="num" id="pendingCount">0</div><div>⏳ ממתינים</div></div>
+        <div class="stat"><div class="num" id="customersCount">0</div><div>👤 לקוחות</div></div>
+        <div class="stat"><div class="num" id="servicesCount">0</div><div>✂️ שירותים</div></div>
+    </div>
 
-        <div class="stats">
-            <div class="stat-card"><div class="number" id="todayCount">0</div><div class="label">📅 תורים היום</div></div>
-            <div class="stat-card"><div class="number" id="pendingCount">0</div><div class="label">⏳ ממתינים</div></div>
-            <div class="stat-card"><div class="number" id="customersCount">0</div><div class="label">👤 לקוחות</div></div>
-            <div class="stat-card"><div class="number" id="servicesCount">0</div><div class="label">✂️ שירותים</div></div>
-        </div>
+    <div>
+        <button class="tab active" onclick="showTab('today')">📅 היום</button>
+        <button class="tab" onclick="showTab('all')">📋 כל התורים</button>
+        <button class="tab" onclick="showTab('add')">➕ תור חדש</button>
+        <button class="tab" onclick="showTab('services')">✂️ שירותים</button>
+        <button class="tab" onclick="showTab('employees')">👨‍💼 עובדים</button>
+        <button class="tab" onclick="showTab('settings')">⚙️ הגדרות</button>
+    </div>
 
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('today')">📅 היום</button>
-            <button class="tab" onclick="switchTab('all')">📋 כל התורים</button>
-            <button class="tab" onclick="switchTab('add')">➕ תור חדש</button>
-            <button class="tab" onclick="switchTab('services')">✂️ שירותים</button>
-            <button class="tab" onclick="switchTab('employees')">👨‍💼 עובדים</button>
-            <button class="tab" onclick="switchTab('settings')">⚙️ הגדרות</button>
-        </div>
-
-        <div class="content" id="tabContent">
-            <div class="empty"><div class="icon">⏳</div><p>טוען...</p></div>
-        </div>
-
+    <div class="card" id="tabContent">
+        <div style="text-align:center;padding:40px;">⏳ טוען...</div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
     </script>
     <script>
         // ================================================
-        // קוד מלא
+        // קוד פשוט עם ID קבוע
         // ================================================
         const SUPABASE_URL = 'https://bcbnvtszkfjhfujnxldm.supabase.co';
         const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';
@@ -128,37 +76,39 @@
         const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 
         const BUSINESS_ID = '44f70d93-dd7e-4250-a7e8-3eb08565ef34';
-        let appointments = [],
-            services = [],
-            employees = [],
-            businessHours = [],
-            holidays = [];
-        const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+        let appointments = [];
+        let services = [];
+        let employees = [];
 
         // ===== אתחול =====
         async function init() {
             try {
+                // בדיקת משתמש
                 const { data: { user } } = await sb.auth.getUser();
-                if (!user) { window.location.href = 'login.html'; return; }
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
                 console.log('✅ מחובר:', user.email);
 
+                // הצגת שם העסק
                 const { data: bizName } = await sb.from('businesses').select('name').eq('id', BUSINESS_ID).maybeSingle();
                 if (bizName) document.getElementById('bizName').textContent = bizName.name;
 
+                // קישור ייחודי
                 const linkEl = document.getElementById('clientLink');
                 const url = window.location.origin + window.location.pathname.replace('dashboard.html', 'client.html') +
                     '?business=' + BUSINESS_ID;
                 linkEl.textContent = url;
-                document.getElementById('uniqueLinkBox').style.display = 'block';
+                document.getElementById('linkBox').style.display = 'block';
 
+                // טעינת נתונים
                 await loadData();
-                await loadWhatsAppNumber();
-                switchTab('today');
+                showTab('today');
 
             } catch (err) {
                 console.error('❌ שגיאה:', err);
-                document.getElementById('tabContent').innerHTML =
-                `<div class="empty"><div class="icon">❌</div><p>${err.message}</p></div>`;
+                document.getElementById('tabContent').innerHTML = `<div class="error">❌ ${err.message}</div>`;
             }
         }
 
@@ -167,16 +117,14 @@
             const { data: apps } = await sb.from('appointments').select('*').eq('business_id', BUSINESS_ID).order(
             'start_time');
             appointments = apps || [];
+
             const { data: servs } = await sb.from('services').select('*').eq('business_id', BUSINESS_ID).eq('is_active',
                 true);
             services = servs || [];
+
             const { data: emps } = await sb.from('employees').select('*').eq('business_id', BUSINESS_ID).eq('is_active',
                 true);
             employees = emps || [];
-            const { data: hours } = await sb.from('business_hours').select('*').eq('business_id', BUSINESS_ID);
-            businessHours = hours || [];
-            const { data: hols } = await sb.from('holidays').select('*').eq('business_id', BUSINESS_ID);
-            holidays = hols || [];
 
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -185,18 +133,8 @@
             document.getElementById('pendingCount').textContent = appointments.filter(a => a.status === 'pending').length;
             document.getElementById('customersCount').textContent = appointments.filter(a => a.customer_name).length;
             document.getElementById('servicesCount').textContent = services.length;
-        }
 
-        // ===== טעינת וואטסאפ =====
-        async function loadWhatsAppNumber() {
-            const { data } = await sb.from('business_settings')
-                .select('whatsapp_number')
-                .eq('business_id', BUSINESS_ID)
-                .maybeSingle();
-            if (data?.whatsapp_number) {
-                document.getElementById('whatsappDisplay').textContent = '✅ מספר שמור: ' + data.whatsapp_number;
-                document.getElementById('whatsappInput').value = data.whatsapp_number;
-            }
+            console.log('📊 נטען:', appointments.length, 'תורים,', services.length, 'שירותים');
         }
 
         // ===== פונקציות עזר =====
@@ -204,7 +142,7 @@
 
         function formatDate(d) { return new Date(d).toLocaleDateString('he-IL'); }
 
-        function getStatusLabel(s) {
+        function statusLabel(s) {
             const map = { 'pending': '⏳ ממתין', 'confirmed': '✅ מאושר', 'cancelled': '❌ מבוטל', 'completed': '✔️ הושלם' };
             return map[s] || s;
         }
@@ -215,97 +153,112 @@
             return map[s] || '';
         }
 
-        function getWhatsAppLink(phone, name, service, date, time) {
+        function whatsappLink(phone, name, service, date, time) {
             if (!phone) return '#';
-            const cleanPhone = phone.replace(/^0/, '');
-            const message = `שלום ${name},\nתורך ל-${service} נקבע ל-${date} בשעה ${time}.\n\nנתראה בעסק!`;
-            return `https://wa.me/972${cleanPhone}?text=${encodeURIComponent(message)}`;
+            const clean = phone.replace(/^0/, '');
+            const msg = `שלום ${name}, תורך ל-${service} נקבע ל-${date} בשעה ${time}. נתראה!`;
+            return `https://wa.me/972${clean}?text=${encodeURIComponent(msg)}`;
         }
 
         // ===== תצוגה =====
-        function renderToday() {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const items = appointments.filter(a => new Date(a.start_time) >= today);
-            if (!items.length) return `<div class="empty"><div class="icon">📭</div><p>אין תורים להיום</p></div>`;
-            return items.map(a => {
-                const waLink = getWhatsAppLink(a.customer_phone, a.customer_name, a.service_name, formatDate(a
-                    .start_time), formatTime(a.start_time));
-                return `<div class="item"><div class="info"><div class="name">${a.customer_name||'לקוח'} — ${a.service_name||'שירות'}</div><div class="details">📞 ${a.customer_phone||''} • 🕐 ${formatTime(a.start_time)}</div></div><div class="actions"><span class="badge ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>${a.status !== 'cancelled' ? `<a href="${waLink}" target="_blank" class="btn-whatsapp">📤 וואטסאפ</a><button class="btn-sm danger" onclick="cancelApp('${a.id}')">❌ בטל</button>` : ''}</div></div>`;
-            }).join('');
-        }
-
-        function renderAll() {
-            if (!appointments.length) return `<div class="empty"><div class="icon">📭</div><p>אין תורים</p></div>`;
-            return appointments.map(a => {
-                const waLink = getWhatsAppLink(a.customer_phone, a.customer_name, a.service_name, formatDate(a
-                    .start_time), formatTime(a.start_time));
-                return `<div class="item"><div class="info"><div class="name">${a.customer_name||'לקוח'} — ${a.service_name||'שירות'}</div><div class="details">📅 ${formatDate(a.start_time)} • 🕐 ${formatTime(a.start_time)} • 📞 ${a.customer_phone||''}</div></div><div class="actions"><span class="badge ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>${a.status !== 'cancelled' ? `<a href="${waLink}" target="_blank" class="btn-whatsapp">📤 וואטסאפ</a><button class="btn-sm danger" onclick="cancelApp('${a.id}')">❌ בטל</button>` : ''}</div></div>`;
-            }).join('');
-        }
-
-        function renderAdd() {
-            const opts = services.map(s =>
-                `<option value="${s.id}">${s.name} (${s.duration_minutes}דק, ${s.price}₪)</option>`).join('');
-            const empOpts = employees.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
-            return `<h3>➕ תור חדש</h3><form onsubmit="addApp(event)"><div class="form-group"><label>שם לקוח *</label><input type="text" id="cName" required></div><div class="form-group"><label>טלפון *</label><input type="tel" id="cPhone" required></div><div class="form-group"><label>שירות *</label><select id="sId" required><option value="">בחר...</option>${opts}</select></div><div class="form-group"><label>עובד (אופציונלי)</label><select id="empId"><option value="">ללא העדפה</option>${empOpts}</select></div><div class="form-row"><div class="form-group"><label>תאריך *</label><input type="date" id="aDate" required></div><div class="form-group"><label>שעה *</label><input type="time" id="aTime" required></div></div><button type="submit" class="btn-primary">💾 שמור תור</button></form>`;
-        }
-
-        function renderServices() {
-            if (!services.length) return `<div class="empty"><div class="icon">✂️</div><p>אין שירותים</p></div><button class="btn-primary" onclick="addService()" style="width:auto;padding:10px 24px;">➕ הוסף שירות</button>`;
-            return `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;"><h3>✂️ השירותים שלי</h3><button class="btn-primary" onclick="addService()" style="width:auto;padding:10px 24px;">➕ הוסף שירות</button></div>${services.map(s => `<div class="service-item"><div><strong>${s.name}</strong> <span style="color:rgba(255,255,255,0.4);margin-right:10px;">⏱️ ${s.duration_minutes}דק • 💰 ${s.price}₪</span></div><button class="btn-sm danger" onclick="deleteService('${s.id}')">🗑️</button></div>`).join('')}`;
-        }
-
-        function renderEmployees() {
-            const list = employees.length ? employees.map(e =>
-                    `<div class="item"><div class="info"><div class="name">${e.name}</div><div class="details">📞 ${e.phone||''}</div></div><div class="actions"><button class="btn-sm danger" onclick="deleteEmployee('${e.id}')">🗑️</button></div></div>`
-                ).join('') :
-                `<div class="empty"><div class="icon">👨‍💼</div><p>אין עובדים</p></div>`;
-            return `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;"><h3>👨‍💼 צוות העובדים</h3><button class="btn-primary" onclick="addEmployee()" style="width:auto;padding:10px 24px;">➕ הוסף עובד</button></div>${list}`;
-        }
-
-        function renderSettings() {
-            let hoursHtml = businessHours.length > 0 ? businessHours.map(h =>
-                    `<div class="hours-card"><div class="day">${DAYS[h.day_of_week]}</div>${h.is_open ? `<div class="time">🕐 ${h.open_time} - ${h.close_time}</div>` : `<div class="closed">❌ סגור</div>`}<button class="btn-sm" onclick="editHour('${h.id}','${h.day_of_week}','${h.is_open}','${h.open_time||''}','${h.close_time||''}')" style="margin-top:6px;">✏️ ערוך</button></div>`
-                ).join('') :
-                `<div class="empty"><div class="icon">🕐</div><p>עדיין לא הוגדרו שעות עבודה</p></div>`;
-            let holidaysHtml = holidays.length > 0 ? holidays.map(h =>
-                    `<div class="item"><div><strong>${h.name||'חג'}</strong> - ${h.holiday_date} ${h.is_closed ? '🔒 סגור' : ''}</div><button class="btn-sm danger" onclick="deleteHoliday('${h.id}')">🗑️</button></div>`
-                ).join('') :
-                `<div class="empty"><div class="icon">🏖️</div><p>אין חגים</p></div>`;
-
-            return `<h3>⚙️ הגדרות העסק</h3><div style="display:grid;gap:24px;">
-                <div class="whatsapp-setting"><h4>📱 וואטסאפ</h4><p style="color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:8px;">הזן את מספר הטלפון לשליחת הודעות:</p><div style="display:flex;gap:10px;flex-wrap:wrap;"><input type="tel" id="whatsappInput" placeholder="050-1234567" style="flex:1;min-width:200px;" /><button class="btn-primary" onclick="saveWhatsAppNumber()" style="width:auto;padding:10px 20px;">💾 שמור</button></div><div id="whatsappDisplay" style="margin-top:8px;color:#48bb78;"></div></div>
-                <div style="background:rgba(255,255,255,0.04);padding:20px;border-radius:16px;"><h4>🕐 שעות עבודה</h4><div class="hours-grid">${hoursHtml}</div><button class="btn-secondary" onclick="addHour()" style="margin-top:12px;">➕ הוסף יום</button></div>
-                <div style="background:rgba(255,255,255,0.04);padding:20px;border-radius:16px;"><h4>🏖️ חגים וימי חופש</h4>${holidaysHtml}<button class="btn-secondary" onclick="addHoliday()" style="margin-top:12px;">➕ הוסף חג</button></div>
-            </div>`;
-        }
-
-        // ===== מעבר טאב =====
-        window.switchTab = function(tab) {
+        window.showTab = function(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             const map = { 'today': 0, 'all': 1, 'add': 2, 'services': 3, 'employees': 4, 'settings': 5 };
             if (map[tab] !== undefined) document.querySelectorAll('.tab')[map[tab]].classList.add('active');
+
             const c = document.getElementById('tabContent');
-            if (tab === 'today') c.innerHTML = renderToday();
-            else if (tab === 'all') c.innerHTML = renderAll();
-            else if (tab === 'add') c.innerHTML = renderAdd();
-            else if (tab === 'services') c.innerHTML = renderServices();
-            else if (tab === 'employees') c.innerHTML = renderEmployees();
-            else if (tab === 'settings') c.innerHTML = renderSettings();
+
+            if (tab === 'today') {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const items = appointments.filter(a => new Date(a.start_time) >= today);
+                c.innerHTML = items.length ? items.map(a => `
+                        <div class="item">
+                            <div><strong>${a.customer_name||'לקוח'}</strong> - ${a.service_name||'שירות'}<br><small>🕐 ${formatTime(a.start_time)}</small></div>
+                            <div>
+                                <span class="${getStatusClass(a.status)}">${statusLabel(a.status)}</span>
+                                ${a.status !== 'cancelled' ? `
+                                    <a href="${whatsappLink(a.customer_phone, a.customer_name, a.service_name, formatDate(a.start_time), formatTime(a.start_time))}" target="_blank" class="btn-whatsapp">📤</a>
+                                    <button class="btn" style="padding:4px 12px;font-size:12px;background:#e53e3e;" onclick="cancelApp('${a.id}')">בטל</button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `).join('') : '<div style="text-align:center;padding:40px;">📭 אין תורים להיום</div>';
+            } else if (tab === 'all') {
+                c.innerHTML = appointments.length ? appointments.map(a => `
+                        <div class="item">
+                            <div><strong>${a.customer_name||'לקוח'}</strong> - ${a.service_name||'שירות'}<br><small>📅 ${formatDate(a.start_time)} 🕐 ${formatTime(a.start_time)}</small></div>
+                            <div>
+                                <span class="${getStatusClass(a.status)}">${statusLabel(a.status)}</span>
+                                ${a.status !== 'cancelled' ? `
+                                    <a href="${whatsappLink(a.customer_phone, a.customer_name, a.service_name, formatDate(a.start_time), formatTime(a.start_time))}" target="_blank" class="btn-whatsapp">📤</a>
+                                    <button class="btn" style="padding:4px 12px;font-size:12px;background:#e53e3e;" onclick="cancelApp('${a.id}')">בטל</button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `).join('') : '<div style="text-align:center;padding:40px;">📭 אין תורים</div>';
+            } else if (tab === 'add') {
+                const opts = services.map(s =>
+                    `<option value="${s.id}">${s.name} (${s.duration_minutes}דק, ${s.price}₪)</option>`).join('');
+                const empOpts = employees.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+                c.innerHTML = `
+                        <h3>➕ תור חדש</h3>
+                        <form onsubmit="addApp(event)">
+                            <input type="text" id="cName" placeholder="שם לקוח" required>
+                            <input type="tel" id="cPhone" placeholder="טלפון" required>
+                            <select id="sId" required><option value="">בחר שירות...</option>${opts}</select>
+                            <select id="empId"><option value="">ללא העדפה</option>${empOpts}</select>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                                <input type="date" id="aDate" required>
+                                <input type="time" id="aTime" required>
+                            </div>
+                            <button type="submit" class="btn" style="width:100%;padding:12px;">💾 שמור תור</button>
+                        </form>
+                    `;
+            } else if (tab === 'services') {
+                c.innerHTML = `
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <h3>✂️ שירותים</h3>
+                            <button class="btn" onclick="addService()">➕ הוסף</button>
+                        </div>
+                        ${services.length ? services.map(s => `
+                            <div class="item">
+                                <div><strong>${s.name}</strong> - ${s.duration_minutes}דק, ${s.price}₪</div>
+                                <button class="btn" style="padding:4px 12px;font-size:12px;background:#e53e3e;" onclick="deleteService('${s.id}')">🗑️</button>
+                            </div>
+                        `).join('') : '<div style="text-align:center;padding:40px;">✂️ אין שירותים</div>'}
+                    `;
+            } else if (tab === 'employees') {
+                c.innerHTML = `
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <h3>👨‍💼 עובדים</h3>
+                            <button class="btn" onclick="addEmployee()">➕ הוסף</button>
+                        </div>
+                        ${employees.length ? employees.map(e => `
+                            <div class="item">
+                                <div><strong>${e.name}</strong> ${e.phone ? `- 📞 ${e.phone}` : ''}</div>
+                                <button class="btn" style="padding:4px 12px;font-size:12px;background:#e53e3e;" onclick="deleteEmployee('${e.id}')">🗑️</button>
+                            </div>
+                        `).join('') : '<div style="text-align:center;padding:40px;">👨‍💼 אין עובדים</div>'}
+                    `;
+            } else if (tab === 'settings') {
+                c.innerHTML = `
+                        <h3>⚙️ הגדרות</h3>
+                        <div style="background:rgba(255,255,255,0.04);padding:16px;border-radius:12px;margin-bottom:12px;">
+                            <h4>🕐 שעות עבודה</h4>
+                            <p style="color:rgba(255,255,255,0.4);font-size:13px;">בקרוב: עריכת שעות עבודה</p>
+                            <button class="btn" onclick="alert('🛠️ בקרוב')" style="padding:4px 16px;font-size:12px;background:#333;">✏️ ערוך</button>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.04);padding:16px;border-radius:12px;">
+                            <h4>🏖️ חגים</h4>
+                            <p style="color:rgba(255,255,255,0.4);font-size:13px;">בקרוב: הוספת חגים</p>
+                            <button class="btn" onclick="alert('🛠️ בקרוב')" style="padding:4px 16px;font-size:12px;">➕ הוסף חג</button>
+                        </div>
+                    `;
+            }
         };
 
         // ===== פעולות =====
-        window.saveWhatsAppNumber = async function() {
-            const phone = document.getElementById('whatsappInput').value.trim();
-            if (!phone) { alert('❌ יש להכניס מספר'); return; }
-            const { error } = await sb.from('business_settings').upsert({ business_id: BUSINESS_ID, whatsapp_number: phone });
-            if (error) { alert('❌ ' + error.message); return; }
-            alert('✅ מספר נשמר!');
-            await loadWhatsAppNumber();
-            document.getElementById('whatsappDisplay').textContent = '✅ מספר שמור: ' + phone;
-        };
-
         window.addApp = async function(e) {
             e.preventDefault();
             const name = document.getElementById('cName').value.trim();
@@ -314,11 +267,14 @@
             const employeeId = document.getElementById('empId').value || null;
             const date = document.getElementById('aDate').value;
             const time = document.getElementById('aTime').value;
+
             if (!name || !phone || !serviceId || !date || !time) { alert('❌ יש למלא הכל'); return; }
             const service = services.find(s => s.id === serviceId);
             if (!service) { alert('❌ שירות לא נמצא'); return; }
+
             const start = new Date(`${date}T${time}:00`);
             const end = new Date(start.getTime() + service.duration_minutes * 60000);
+
             const { error } = await sb.from('appointments').insert([{
                 business_id: BUSINESS_ID,
                 customer_name: name,
@@ -331,10 +287,11 @@
                 price: service.price,
                 status: 'confirmed'
             }]);
+
             if (error) { alert('❌ ' + error.message); return; }
             alert('✅ תור נוצר!');
             await loadData();
-            switchTab('today');
+            showTab('today');
         };
 
         window.cancelApp = async function(id) {
@@ -343,7 +300,7 @@
             if (error) { alert('❌ ' + error.message); return; }
             alert('✅ בוטל!');
             await loadData();
-            switchTab('today');
+            showTab('today');
         };
 
         window.addService = async function() {
@@ -353,6 +310,7 @@
             if (!duration) return;
             const price = parseFloat(prompt('💰 מחיר (ש"ח):'));
             if (!price) return;
+
             const { error } = await sb.from('services').insert([{
                 business_id: BUSINESS_ID,
                 name: name,
@@ -360,10 +318,11 @@
                 price: price,
                 is_active: true
             }]);
+
             if (error) { alert('❌ ' + error.message); return; }
             alert('✅ שירות נוסף!');
             await loadData();
-            switchTab('services');
+            showTab('services');
         };
 
         window.deleteService = async function(id) {
@@ -372,7 +331,7 @@
             if (error) { alert('❌ ' + error.message); return; }
             alert('✅ נמחק!');
             await loadData();
-            switchTab('services');
+            showTab('services');
         };
 
         window.addEmployee = async function() {
@@ -380,19 +339,51 @@
             if (!name) return;
             const phone = prompt('📞 טלפון:');
             if (!phone) return;
+
             const { error } = await sb.from('employees').insert([{
                 business_id: BUSINESS_ID,
                 name: name,
                 phone: phone,
                 is_active: true
             }]);
+
             if (error) { alert('❌ ' + error.message); return; }
             alert('✅ עובד נוסף!');
             await loadData();
-            switchTab('employees');
+            showTab('employees');
         };
 
         window.deleteEmployee = async function(id) {
             if (!confirm('למחוק עובד?')) return;
             const { error } = await sb.from('employees').update({ is_active: false }).eq('id', id);
-            if (error) { alert('❌ '
+            if (error) { alert('❌ ' + error.message); return; }
+            alert('✅ נמחק!');
+            await loadData();
+            showTab('employees');
+        };
+
+        window.copyLink = function() {
+            const linkEl = document.getElementById('clientLink');
+            const text = linkEl.textContent;
+            navigator.clipboard.writeText(text).then(() => alert('✅ הקישור הועתק!')).catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+                alert('✅ הקישור הועתק!');
+            });
+        };
+
+        window.logout = async function() {
+            await sb.auth.signOut();
+            localStorage.clear();
+            window.location.href = 'login.html';
+        };
+
+        // ===== הפעלה =====
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
