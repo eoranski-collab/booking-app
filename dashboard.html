@@ -22,6 +22,11 @@
         .btn-whatsapp{background:#25D366;color:#fff;padding:4px 12px;border-radius:20px;text-decoration:none;font-size:12px;display:inline-block;margin:2px}
         .btn-whatsapp:hover{background:#1da851}
         .error{color:#f5576c;text-align:center;padding:40px}
+        .badge{padding:4px 12px;border-radius:20px;font-size:12px;display:inline-block}
+        .badge-pending{background:#ffc10733;color:#ffc107}
+        .badge-confirmed{background:#48bb7822;color:#48bb78}
+        .badge-cancelled{background:#f5576c33;color:#f5576c}
+        .badge-completed{background:#4299e133;color:#4299e1}
     </style>
 </head>
 <body>
@@ -63,14 +68,15 @@
     </script>
     <script>
         // ================================================
-        // קוד פשוט שעובד
+        // קוד פשוט עם ID קבוע
         // ================================================
         const SUPABASE_URL = 'https://bcbnvtszkfjhfujnxldm.supabase.co';
         const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';
         const { createClient } = supabase;
         const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 
-        let BUSINESS_ID = null;
+        // ✅ ID קבוע של העסק
+        const BUSINESS_ID = '44f70d93-dd7e-4250-a7e8-3eb08565ef34';
         let appointments = [];
         let services = [];
         let employees = [];
@@ -78,68 +84,13 @@
         // ===== אתחול =====
         async function init() {
             try {
-                // 1. בדיקת משתמש
+                // בדיקת משתמש
                 const { data: { user } } = await sb.auth.getUser();
                 if (!user) {
                     window.location.href = 'login.html';
                     return;
                 }
                 console.log('✅ מחובר:', user.email);
-
-                // 2. שמירת המשתמש
-                localStorage.setItem('user', JSON.stringify(user));
-
-                // 3. מציאת עסק
-                // נסה מ-Local Storage
-                BUSINESS_ID = localStorage.getItem('businessId');
-
-                if (!BUSINESS_ID) {
-                    // חפש ב-users
-                    const { data: userData } = await sb
-                        .from('users')
-                        .select('business_id')
-                        .eq('id', user.id)
-                        .maybeSingle();
-
-                    if (userData?.business_id) {
-                        BUSINESS_ID = userData.business_id;
-                        localStorage.setItem('businessId', BUSINESS_ID);
-                        console.log('✅ עסק נמצא ב-users');
-                    } else {
-                        // חפש לפי אימייל
-                        const { data: biz } = await sb
-                            .from('businesses')
-                            .select('id, name')
-                            .eq('email', user.email)
-                            .maybeSingle();
-
-                        if (biz) {
-                            BUSINESS_ID = biz.id;
-                            localStorage.setItem('businessId', BUSINESS_ID);
-                            document.getElementById('bizName').textContent = biz.name;
-                            console.log('✅ עסק נמצא לפי אימייל');
-                            await sb.from('users').update({ business_id: BUSINESS_ID }).eq('id', user.id);
-                        }
-                    }
-                }
-
-                // אם אין - קח עסק ראשון
-                if (!BUSINESS_ID) {
-                    const { data: first } = await sb.from('businesses').select('id, name').limit(1);
-                    if (first && first.length > 0) {
-                        BUSINESS_ID = first[0].id;
-                        localStorage.setItem('businessId', BUSINESS_ID);
-                        document.getElementById('bizName').textContent = first[0].name;
-                        console.log('✅ עסק ראשון');
-                    }
-                }
-
-                if (!BUSINESS_ID) {
-                    document.getElementById('bizName').textContent = '❌ לא נמצא עסק';
-                    document.getElementById('tabContent').innerHTML =
-                        `<div class="error"><h3>❌ לא נמצא עסק</h3><button class="btn" onclick="window.location.href='register.html'">📝 הרשם עסק</button></div>`;
-                    return;
-                }
 
                 // הצגת שם העסק
                 const { data: bizName } = await sb.from('businesses').select('name').eq('id', BUSINESS_ID).maybeSingle();
@@ -164,8 +115,6 @@
 
         // ===== טעינת נתונים =====
         async function loadData() {
-            if (!BUSINESS_ID) return;
-
             const { data: apps } = await sb.from('appointments').select('*').eq('business_id', BUSINESS_ID).order(
             'start_time');
             appointments = apps || [];
@@ -228,7 +177,7 @@
                         <div class="item">
                             <div><strong>${a.customer_name||'לקוח'}</strong> - ${a.service_name||'שירות'}<br><small>🕐 ${formatTime(a.start_time)}</small></div>
                             <div>
-                                <span class="badge ${getStatusClass(a.status)}">${statusLabel(a.status)}</span>
+                                <span class="${getStatusClass(a.status)}">${statusLabel(a.status)}</span>
                                 ${a.status !== 'cancelled' ? `
                                     <a href="${whatsappLink(a.customer_phone, a.customer_name, a.service_name, formatDate(a.start_time), formatTime(a.start_time))}" target="_blank" class="btn-whatsapp">📤</a>
                                     <button class="btn" style="padding:4px 12px;font-size:12px;background:#e53e3e;" onclick="cancelApp('${a.id}')">בטל</button>
@@ -241,7 +190,7 @@
                         <div class="item">
                             <div><strong>${a.customer_name||'לקוח'}</strong> - ${a.service_name||'שירות'}<br><small>📅 ${formatDate(a.start_time)} 🕐 ${formatTime(a.start_time)}</small></div>
                             <div>
-                                <span class="badge ${getStatusClass(a.status)}">${statusLabel(a.status)}</span>
+                                <span class="${getStatusClass(a.status)}">${statusLabel(a.status)}</span>
                                 ${a.status !== 'cancelled' ? `
                                     <a href="${whatsappLink(a.customer_phone, a.customer_name, a.service_name, formatDate(a.start_time), formatTime(a.start_time))}" target="_blank" class="btn-whatsapp">📤</a>
                                     <button class="btn" style="padding:4px 12px;font-size:12px;background:#e53e3e;" onclick="cancelApp('${a.id}')">בטל</button>
