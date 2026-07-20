@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>הרשמה - MyCut</title>
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Heebo',sans-serif;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;direction:rtl}
@@ -161,8 +160,6 @@
             if (authError) {
                 if (authError.message.includes('already registered')) {
                     showAlert('❌ אימייל זה כבר רשום. נסה להתחבר.', 'error');
-                } else if (authError.message.includes('rate limit')) {
-                    showAlert('⏳ הגעת למגבלת הניסיונות. אנא המתן שעה.', 'error');
                 } else {
                     showAlert('❌ שגיאת אימות: ' + authError.message, 'error');
                 }
@@ -226,6 +223,18 @@
 
             console.log('✅ הכול עובד!');
 
+            // ================================================
+            // ✅ חשוב: מתנתקים מהמשתמש הישן ומתחברים עם החדש
+            // ================================================
+            await sb.auth.signOut();
+            localStorage.clear();
+
+            // מתחברים עם המשתמש החדש
+            await sb.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
             localStorage.setItem('user', JSON.stringify(authData.user));
             localStorage.setItem('business', JSON.stringify(business));
 
@@ -243,21 +252,17 @@
         }
     });
 
-    // ===== ❌ ביטול ההפניה האוטומטית - פשוט! =====
-    // לא עושים כלום! המשתמש יישאר בדף הרשמה.
-    // אם הוא רוצה להתחבר - יש כפתור "התחבר" בתחתית.
+    // ================================================
+    // ❌ לא מפנים אוטומטית - נשארים בדף
+    // ================================================
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('📝 דף הרשמה נטען');
+    });
 
-    // ===== ניקוי שגיאות =====
     document.querySelectorAll('.form-group input').forEach(input => {
         input.addEventListener('input', () => {
             alertEl.className = 'alert';
         });
-    });
-
-    // ===== הפעלה =====
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('📝 דף הרשמה נטען');
-        // ❗לא בודקים אם המשתמש מחובר - נשארים בדף
     });
 </script>
 </body>
