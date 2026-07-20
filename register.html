@@ -243,43 +243,21 @@
         }
     });
 
-    // ===== בדיקה אם כבר מחובר - עם אפשרות לעקוף =====
-    async function checkExistingSession() {
-        // ✅ בדיקה אם יש פרמטר force=true בכתובת
-        const params = new URLSearchParams(window.location.search);
-        const force = params.get('force');
-        
-        if (force === 'true') {
-            console.log('🔓 כניסה מאולצת לדף הרשמה (מעקף)');
-            return; // נשאר בדף הרשמה
-        }
-        
-        try {
-            const { data: { user } } = await sb.auth.getUser();
-            if (user) {
-                console.log('👤 משתמש מחובר, מעביר לדשבורד...');
-                window.location.href = 'dashboard.html';
-            }
-        } catch (error) {
-            console.log('לא מחובר');
-        }
-    }
+    // ===== ❌ ביטול ההפניה האוטומטית - פשוט! =====
+    // לא עושים כלום! המשתמש יישאר בדף הרשמה.
+    // אם הוא רוצה להתחבר - יש כפתור "התחבר" בתחתית.
 
     // ===== ניקוי שגיאות =====
     document.querySelectorAll('.form-group input').forEach(input => {
         input.addEventListener('input', () => {
-            const errorEl = document.getElementById(input.id + 'Error');
-            if (errorEl) {
-                errorEl.className = 'error-msg';
-                input.className = '';
-            }
             alertEl.className = 'alert';
         });
     });
 
     // ===== הפעלה =====
     document.addEventListener('DOMContentLoaded', () => {
-        checkExistingSession();
+        console.log('📝 דף הרשמה נטען');
+        // ❗לא בודקים אם המשתמש מחובר - נשארים בדף
     });
 </script>
 </body>
