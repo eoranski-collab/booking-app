@@ -69,6 +69,8 @@
         .hours-card .day{font-weight:600;font-size:14px}
         .hours-card .time{font-size:13px;color:rgba(255,255,255,0.5)}
         .hours-card .closed{color:#f5576c;font-weight:500}
+        .whatsapp-setting{background:rgba(255,255,255,0.04);padding:20px;border-radius:16px;margin-bottom:16px}
+        .whatsapp-setting input{width:100%;padding:12px;border-radius:8px;border:none;font-size:16px}
         @media(max-width:768px){.header{padding:12px 16px}.container{padding:12px}.stats{grid-template-columns:1fr 1fr}.content{padding:16px}}
         @media(max-width:480px){.stats{grid-template-columns:1fr}.item{flex-direction:column;align-items:stretch}.item .actions{justify-content:flex-start;flex-wrap:wrap}}
     </style>
@@ -119,20 +121,20 @@
     </script>
     <script>
         // ================================================
-        // קוד מלא עם כל הפיצ'רים + ID קבוע
+        // קוד מלא עם כל הפיצ'רים
         // ================================================
         const SUPABASE_URL = 'https://bcbnvtszkfjhfujnxldm.supabase.co';
         const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';
         const { createClient } = supabase;
         const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 
-        // ✅ ID קבוע של העסק
         const BUSINESS_ID = '44f70d93-dd7e-4250-a7e8-3eb08565ef34';
         let appointments = [];
         let services = [];
         let employees = [];
         let businessHours = [];
         let holidays = [];
+        let whatsappNumber = '';
         const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
         // ===== אתחול =====
@@ -142,11 +144,9 @@
                 if (!user) { window.location.href = 'login.html'; return; }
                 console.log('✅ מחובר:', user.email);
 
-                // שם העסק
                 const { data: bizName } = await sb.from('businesses').select('name').eq('id', BUSINESS_ID).maybeSingle();
                 if (bizName) document.getElementById('bizName').textContent = bizName.name;
 
-                // קישור ייחודי
                 const linkEl = document.getElementById('clientLink');
                 const url = window.location.origin + window.location.pathname.replace('dashboard.html', 'client.html') +
                     '?business=' + BUSINESS_ID;
@@ -154,6 +154,7 @@
                 document.getElementById('uniqueLinkBox').style.display = 'block';
 
                 await loadData();
+                await loadWhatsAppNumber();
                 switchTab('today');
 
             } catch (err) {
@@ -192,6 +193,20 @@
 
             console.log('📊 נטען:', appointments.length, 'תורים,', services.length, 'שירותים,', businessHours.length,
                 'שעות עבודה');
+        }
+
+        // ===== טעינת מספר וואטסאפ =====
+        async function loadWhatsAppNumber() {
+            const { data } = await sb.from('business_settings')
+                .select('whatsapp_number')
+                .eq('business_id', BUSINESS_ID)
+                .maybeSingle();
+
+            if (data?.whatsapp_number) {
+                whatsappNumber = data.whatsapp_number;
+                document.getElementById('whatsappDisplay')?.textContent?.('✅ מספר שמור: ' + whatsappNumber);
+                document.getElementById('whatsappInput')?.value(whatsappNumber);
+            }
         }
 
         // ===== פונקציות עזר =====
@@ -289,7 +304,7 @@
             return `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;"><h3>👨‍💼 צוות העובדים</h3><button class="btn-primary" onclick="addEmployee()" style="width:auto;padding:10px 24px;">➕ הוסף עובד</button></div>${list}`;
         }
 
-        // ===== ⚙️ הגדרות - כולל שעות עבודה וחגים =====
+        // ===== ⚙️ הגדרות - עם וואטסאפ + שעות + חגים =====
         function renderSettings() {
             let hoursHtml = '';
             if (businessHours.length > 0) {
@@ -319,19 +334,49 @@
             return `
                     <h3>⚙️ הגדרות העסק</h3>
                     <div style="display:grid;gap:24px;">
+
+                        <!-- ✅ וואטסאפ -->
+                        <div class="whatsapp-setting">
+                            <h4>📱 וואטסאפ</h4>
+                            <p style="color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:8px;">הזן את מספר הטלפון לשליחת הודעות:</p>
+                            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                                <input type="tel" id="whatsappInput" placeholder="050-1234567" style="flex:1;min-width:200px;" />
+                                <button class="btn-primary" onclick="saveWhatsAppNumber()" style="width:auto;padding:10px 20px;">💾 שמור</button>
+                            </div>
+                            <div id="whatsappDisplay" style="margin-top:8px;color:#48bb78;"></div>
+                        </div>
+
                         <div style="background:rgba(255,255,255,0.04);padding:20px;border-radius:16px;">
                             <h4>🕐 שעות עבודה</h4>
                             <div class="hours-grid">${hoursHtml}</div>
                             <button class="btn-secondary" onclick="addHour()" style="margin-top:12px;">➕ הוסף יום</button>
                         </div>
+
                         <div style="background:rgba(255,255,255,0.04);padding:20px;border-radius:16px;">
                             <h4>🏖️ חגים וימי חופש</h4>
                             ${holidaysHtml}
                             <button class="btn-secondary" onclick="addHoliday()" style="margin-top:12px;">➕ הוסף חג</button>
                         </div>
+
                     </div>
                 `;
         }
+
+        // ===== שמירת וואטסאפ =====
+        window.saveWhatsAppNumber = async function() {
+            const phone = document.getElementById('whatsappInput').value.trim();
+            if (!phone) { alert('❌ יש להכניס מספר טלפון'); return; }
+
+            const { error } = await sb.from('business_settings').upsert({
+                business_id: BUSINESS_ID,
+                whatsapp_number: phone
+            });
+
+            if (error) { alert('❌ ' + error.message); return; }
+            alert('✅ מספר וואטסאפ נשמר!');
+            await loadWhatsAppNumber();
+            document.getElementById('whatsappDisplay').textContent = '✅ מספר שמור: ' + phone;
+        };
 
         // ===== ניהול שעות עבודה =====
         window.addHour = async function() {
@@ -399,63 +444,4 @@
                 } else if (action === '3') {
                     const newOpen = prompt('🕐 שעת פתיחה (HH:MM):', '09:00');
                     if (!newOpen) return;
-                    const newClose = prompt('🕐 שעת סגירה (HH:MM):', '18:00');
-                    if (!newClose) return;
-                    const { error } = await sb.from('business_hours').update({
-                        is_open: true,
-                        open_time: newOpen,
-                        close_time: newClose
-                    }).eq('id', id);
-                    if (error) { alert('❌ ' + error.message); return; }
-                    alert('✅ היום נפתח!');
-                } else if (action === '4') {
-                    if (!confirm('למחוק את היום?')) return;
-                    const { error } = await sb.from('business_hours').delete().eq('id', id);
-                    if (error) { alert('❌ ' + error.message); return; }
-                    alert('✅ נמחק!');
-                } else {
-                    alert('❌ בחירה לא תקינה');
-                    return;
-                }
-
-                await loadData();
-                switchTab('settings');
-            } catch (err) {
-                alert('❌ שגיאה: ' + err.message);
-            }
-        };
-
-        // ===== ניהול חגים =====
-        window.addHoliday = async function() {
-            const date = prompt('📅 תאריך (YYYY-MM-DD):');
-            if (!date) return;
-            const name = prompt('📝 שם החג:');
-            if (!name) return;
-
-            const { error } = await sb.from('holidays').insert([{
-                business_id: BUSINESS_ID,
-                holiday_date: date,
-                name: name,
-                is_closed: true
-            }]);
-
-            if (error) { alert('❌ ' + error.message); return; }
-            alert('✅ חג נוסף!');
-            await loadData();
-            switchTab('settings');
-        };
-
-        window.deleteHoliday = async function(id) {
-            if (!confirm('למחוק חג?')) return;
-            const { error } = await sb.from('holidays').delete().eq('id', id);
-            if (error) { alert('❌ ' + error.message); return; }
-            alert('✅ נמחק!');
-            await loadData();
-            switchTab('settings');
-        };
-
-        // ===== מעבר טאב =====
-        window.switchTab = function(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(t => {
-                if (t.textContent.includes(tab === 'today
+                    const
