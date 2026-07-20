@@ -105,7 +105,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
     </script>
-    <script>
+    <script>     console.log('🔥 דף דשבורד נטען!');     alert('✅ ה-JavaScript רץ!');          const SUPABASE_URL = 'https://bcbnvtszkfjhfujnxldm.supabase.co';     const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';     const { createClient } = supabase;     const sb = createClient(SUPABASE_URL, SUPABASE_ANON);          sb.from('businesses').select('*').then(data => {         console.log('📊 נתונים:', data);     }).catch(err => {         console.error('❌ שגיאה:', err);     }); </script>
         // ================================================
         // ✅ קוד מתחבר לשרת - גרסה פשוטה שעובדת
         // ================================================
