@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MyCut - דשבורד</title>
-    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&display=swap" rel="stylesheet" />
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Heebo',sans-serif;background:#0f0c29;color:#fff;direction:rtl;min-height:100vh}
@@ -121,7 +120,7 @@
     </script>
     <script>
         // ================================================
-        // קוד מלא עם כל הפיצ'רים
+        // קוד מלא
         // ================================================
         const SUPABASE_URL = 'https://bcbnvtszkfjhfujnxldm.supabase.co';
         const SUPABASE_ANON = 'sb_publishable_IzFYbwo2gI65OvmBM53-5g_lAffckNt';
@@ -129,12 +128,11 @@
         const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 
         const BUSINESS_ID = '44f70d93-dd7e-4250-a7e8-3eb08565ef34';
-        let appointments = [];
-        let services = [];
-        let employees = [];
-        let businessHours = [];
-        let holidays = [];
-        let whatsappNumber = '';
+        let appointments = [],
+            services = [],
+            employees = [],
+            businessHours = [],
+            holidays = [];
         const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
         // ===== אתחול =====
@@ -159,7 +157,8 @@
 
             } catch (err) {
                 console.error('❌ שגיאה:', err);
-                document.getElementById('tabContent').innerHTML = `<div class="empty"><div class="icon">❌</div><p>${err.message}</p></div>`;
+                document.getElementById('tabContent').innerHTML =
+                `<div class="empty"><div class="icon">❌</div><p>${err.message}</p></div>`;
             }
         }
 
@@ -168,18 +167,14 @@
             const { data: apps } = await sb.from('appointments').select('*').eq('business_id', BUSINESS_ID).order(
             'start_time');
             appointments = apps || [];
-
             const { data: servs } = await sb.from('services').select('*').eq('business_id', BUSINESS_ID).eq('is_active',
                 true);
             services = servs || [];
-
             const { data: emps } = await sb.from('employees').select('*').eq('business_id', BUSINESS_ID).eq('is_active',
                 true);
             employees = emps || [];
-
             const { data: hours } = await sb.from('business_hours').select('*').eq('business_id', BUSINESS_ID);
             businessHours = hours || [];
-
             const { data: hols } = await sb.from('holidays').select('*').eq('business_id', BUSINESS_ID);
             holidays = hols || [];
 
@@ -190,22 +185,17 @@
             document.getElementById('pendingCount').textContent = appointments.filter(a => a.status === 'pending').length;
             document.getElementById('customersCount').textContent = appointments.filter(a => a.customer_name).length;
             document.getElementById('servicesCount').textContent = services.length;
-
-            console.log('📊 נטען:', appointments.length, 'תורים,', services.length, 'שירותים,', businessHours.length,
-                'שעות עבודה');
         }
 
-        // ===== טעינת מספר וואטסאפ =====
+        // ===== טעינת וואטסאפ =====
         async function loadWhatsAppNumber() {
             const { data } = await sb.from('business_settings')
                 .select('whatsapp_number')
                 .eq('business_id', BUSINESS_ID)
                 .maybeSingle();
-
             if (data?.whatsapp_number) {
-                whatsappNumber = data.whatsapp_number;
-                document.getElementById('whatsappDisplay')?.textContent?.('✅ מספר שמור: ' + whatsappNumber);
-                document.getElementById('whatsappInput')?.value(whatsappNumber);
+                document.getElementById('whatsappDisplay').textContent = '✅ מספר שמור: ' + data.whatsapp_number;
+                document.getElementById('whatsappInput').value = data.whatsapp_number;
             }
         }
 
@@ -225,16 +215,14 @@
             return map[s] || '';
         }
 
-        // ===== קישור וואטסאפ =====
         function getWhatsAppLink(phone, name, service, date, time) {
             if (!phone) return '#';
             const cleanPhone = phone.replace(/^0/, '');
             const message = `שלום ${name},\nתורך ל-${service} נקבע ל-${date} בשעה ${time}.\n\nנתראה בעסק!`;
-            const encodedMessage = encodeURIComponent(message);
-            return `https://wa.me/972${cleanPhone}?text=${encodedMessage}`;
+            return `https://wa.me/972${cleanPhone}?text=${encodeURIComponent(message)}`;
         }
 
-        // ===== תצוגת טאבים =====
+        // ===== תצוגה =====
         function renderToday() {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -243,21 +231,7 @@
             return items.map(a => {
                 const waLink = getWhatsAppLink(a.customer_phone, a.customer_name, a.service_name, formatDate(a
                     .start_time), formatTime(a.start_time));
-                return `
-                        <div class="item">
-                            <div class="info">
-                                <div class="name">${a.customer_name||'לקוח'} — ${a.service_name||'שירות'}</div>
-                                <div class="details">📞 ${a.customer_phone||''} • 🕐 ${formatTime(a.start_time)}</div>
-                            </div>
-                            <div class="actions">
-                                <span class="badge ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
-                                ${a.status !== 'cancelled' ? `
-                                    <a href="${waLink}" target="_blank" class="btn-whatsapp">📤 וואטסאפ</a>
-                                    <button class="btn-sm danger" onclick="cancelApp('${a.id}')">❌ בטל</button>
-                                ` : ''}
-                            </div>
-                        </div>
-                    `;
+                return `<div class="item"><div class="info"><div class="name">${a.customer_name||'לקוח'} — ${a.service_name||'שירות'}</div><div class="details">📞 ${a.customer_phone||''} • 🕐 ${formatTime(a.start_time)}</div></div><div class="actions"><span class="badge ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>${a.status !== 'cancelled' ? `<a href="${waLink}" target="_blank" class="btn-whatsapp">📤 וואטסאפ</a><button class="btn-sm danger" onclick="cancelApp('${a.id}')">❌ בטל</button>` : ''}</div></div>`;
             }).join('');
         }
 
@@ -266,21 +240,7 @@
             return appointments.map(a => {
                 const waLink = getWhatsAppLink(a.customer_phone, a.customer_name, a.service_name, formatDate(a
                     .start_time), formatTime(a.start_time));
-                return `
-                        <div class="item">
-                            <div class="info">
-                                <div class="name">${a.customer_name||'לקוח'} — ${a.service_name||'שירות'}</div>
-                                <div class="details">📅 ${formatDate(a.start_time)} • 🕐 ${formatTime(a.start_time)} • 📞 ${a.customer_phone||''}</div>
-                            </div>
-                            <div class="actions">
-                                <span class="badge ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>
-                                ${a.status !== 'cancelled' ? `
-                                    <a href="${waLink}" target="_blank" class="btn-whatsapp">📤 וואטסאפ</a>
-                                    <button class="btn-sm danger" onclick="cancelApp('${a.id}')">❌ בטל</button>
-                                ` : ''}
-                            </div>
-                        </div>
-                    `;
+                return `<div class="item"><div class="info"><div class="name">${a.customer_name||'לקוח'} — ${a.service_name||'שירות'}</div><div class="details">📅 ${formatDate(a.start_time)} • 🕐 ${formatTime(a.start_time)} • 📞 ${a.customer_phone||''}</div></div><div class="actions"><span class="badge ${getStatusClass(a.status)}">${getStatusLabel(a.status)}</span>${a.status !== 'cancelled' ? `<a href="${waLink}" target="_blank" class="btn-whatsapp">📤 וואטסאפ</a><button class="btn-sm danger" onclick="cancelApp('${a.id}')">❌ בטל</button>` : ''}</div></div>`;
             }).join('');
         }
 
@@ -304,144 +264,135 @@
             return `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;"><h3>👨‍💼 צוות העובדים</h3><button class="btn-primary" onclick="addEmployee()" style="width:auto;padding:10px 24px;">➕ הוסף עובד</button></div>${list}`;
         }
 
-        // ===== ⚙️ הגדרות - עם וואטסאפ + שעות + חגים =====
         function renderSettings() {
-            let hoursHtml = '';
-            if (businessHours.length > 0) {
-                hoursHtml = businessHours.map(h => `
-                        <div class="hours-card">
-                            <div class="day">${DAYS[h.day_of_week]}</div>
-                            ${h.is_open ? `<div class="time">🕐 ${h.open_time} - ${h.close_time}</div>` : `<div class="closed">❌ סגור</div>`}
-                            <button class="btn-sm" onclick="editHour('${h.id}','${h.day_of_week}','${h.is_open}','${h.open_time||''}','${h.close_time||''}')" style="margin-top:6px;">✏️ ערוך</button>
-                        </div>
-                    `).join('');
-            } else {
-                hoursHtml = `<div class="empty"><div class="icon">🕐</div><p>עדיין לא הוגדרו שעות עבודה</p></div>`;
-            }
+            let hoursHtml = businessHours.length > 0 ? businessHours.map(h =>
+                    `<div class="hours-card"><div class="day">${DAYS[h.day_of_week]}</div>${h.is_open ? `<div class="time">🕐 ${h.open_time} - ${h.close_time}</div>` : `<div class="closed">❌ סגור</div>`}<button class="btn-sm" onclick="editHour('${h.id}','${h.day_of_week}','${h.is_open}','${h.open_time||''}','${h.close_time||''}')" style="margin-top:6px;">✏️ ערוך</button></div>`
+                ).join('') :
+                `<div class="empty"><div class="icon">🕐</div><p>עדיין לא הוגדרו שעות עבודה</p></div>`;
+            let holidaysHtml = holidays.length > 0 ? holidays.map(h =>
+                    `<div class="item"><div><strong>${h.name||'חג'}</strong> - ${h.holiday_date} ${h.is_closed ? '🔒 סגור' : ''}</div><button class="btn-sm danger" onclick="deleteHoliday('${h.id}')">🗑️</button></div>`
+                ).join('') :
+                `<div class="empty"><div class="icon">🏖️</div><p>אין חגים</p></div>`;
 
-            let holidaysHtml = '';
-            if (holidays.length > 0) {
-                holidaysHtml = holidays.map(h => `
-                        <div class="item">
-                            <div><strong>${h.name||'חג'}</strong> - ${h.holiday_date} ${h.is_closed ? '🔒 סגור' : ''}</div>
-                            <button class="btn-sm danger" onclick="deleteHoliday('${h.id}')">🗑️</button>
-                        </div>
-                    `).join('');
-            } else {
-                holidaysHtml = `<div class="empty"><div class="icon">🏖️</div><p>אין חגים</p></div>`;
-            }
-
-            return `
-                    <h3>⚙️ הגדרות העסק</h3>
-                    <div style="display:grid;gap:24px;">
-
-                        <!-- ✅ וואטסאפ -->
-                        <div class="whatsapp-setting">
-                            <h4>📱 וואטסאפ</h4>
-                            <p style="color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:8px;">הזן את מספר הטלפון לשליחת הודעות:</p>
-                            <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                                <input type="tel" id="whatsappInput" placeholder="050-1234567" style="flex:1;min-width:200px;" />
-                                <button class="btn-primary" onclick="saveWhatsAppNumber()" style="width:auto;padding:10px 20px;">💾 שמור</button>
-                            </div>
-                            <div id="whatsappDisplay" style="margin-top:8px;color:#48bb78;"></div>
-                        </div>
-
-                        <div style="background:rgba(255,255,255,0.04);padding:20px;border-radius:16px;">
-                            <h4>🕐 שעות עבודה</h4>
-                            <div class="hours-grid">${hoursHtml}</div>
-                            <button class="btn-secondary" onclick="addHour()" style="margin-top:12px;">➕ הוסף יום</button>
-                        </div>
-
-                        <div style="background:rgba(255,255,255,0.04);padding:20px;border-radius:16px;">
-                            <h4>🏖️ חגים וימי חופש</h4>
-                            ${holidaysHtml}
-                            <button class="btn-secondary" onclick="addHoliday()" style="margin-top:12px;">➕ הוסף חג</button>
-                        </div>
-
-                    </div>
-                `;
+            return `<h3>⚙️ הגדרות העסק</h3><div style="display:grid;gap:24px;">
+                <div class="whatsapp-setting"><h4>📱 וואטסאפ</h4><p style="color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:8px;">הזן את מספר הטלפון לשליחת הודעות:</p><div style="display:flex;gap:10px;flex-wrap:wrap;"><input type="tel" id="whatsappInput" placeholder="050-1234567" style="flex:1;min-width:200px;" /><button class="btn-primary" onclick="saveWhatsAppNumber()" style="width:auto;padding:10px 20px;">💾 שמור</button></div><div id="whatsappDisplay" style="margin-top:8px;color:#48bb78;"></div></div>
+                <div style="background:rgba(255,255,255,0.04);padding:20px;border-radius:16px;"><h4>🕐 שעות עבודה</h4><div class="hours-grid">${hoursHtml}</div><button class="btn-secondary" onclick="addHour()" style="margin-top:12px;">➕ הוסף יום</button></div>
+                <div style="background:rgba(255,255,255,0.04);padding:20px;border-radius:16px;"><h4>🏖️ חגים וימי חופש</h4>${holidaysHtml}<button class="btn-secondary" onclick="addHoliday()" style="margin-top:12px;">➕ הוסף חג</button></div>
+            </div>`;
         }
 
-        // ===== שמירת וואטסאפ =====
+        // ===== מעבר טאב =====
+        window.switchTab = function(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            const map = { 'today': 0, 'all': 1, 'add': 2, 'services': 3, 'employees': 4, 'settings': 5 };
+            if (map[tab] !== undefined) document.querySelectorAll('.tab')[map[tab]].classList.add('active');
+            const c = document.getElementById('tabContent');
+            if (tab === 'today') c.innerHTML = renderToday();
+            else if (tab === 'all') c.innerHTML = renderAll();
+            else if (tab === 'add') c.innerHTML = renderAdd();
+            else if (tab === 'services') c.innerHTML = renderServices();
+            else if (tab === 'employees') c.innerHTML = renderEmployees();
+            else if (tab === 'settings') c.innerHTML = renderSettings();
+        };
+
+        // ===== פעולות =====
         window.saveWhatsAppNumber = async function() {
             const phone = document.getElementById('whatsappInput').value.trim();
-            if (!phone) { alert('❌ יש להכניס מספר טלפון'); return; }
-
-            const { error } = await sb.from('business_settings').upsert({
-                business_id: BUSINESS_ID,
-                whatsapp_number: phone
-            });
-
+            if (!phone) { alert('❌ יש להכניס מספר'); return; }
+            const { error } = await sb.from('business_settings').upsert({ business_id: BUSINESS_ID, whatsapp_number: phone });
             if (error) { alert('❌ ' + error.message); return; }
-            alert('✅ מספר וואטסאפ נשמר!');
+            alert('✅ מספר נשמר!');
             await loadWhatsAppNumber();
             document.getElementById('whatsappDisplay').textContent = '✅ מספר שמור: ' + phone;
         };
 
-        // ===== ניהול שעות עבודה =====
-        window.addHour = async function() {
-            let msg = '📅 בחר יום:\n\n';
-            for (let i = 0; i < 7; i++) {
-                const exists = businessHours.find(h => h.day_of_week === i);
-                msg += `${i+1}. ${DAYS[i]} ${exists ? '✅' : '❌'}\n`;
-            }
-            msg += '\nהקלד את מספר היום (1-7):';
-
-            const dayNum = prompt(msg);
-            if (!dayNum) return;
-            const dayIndex = parseInt(dayNum) - 1;
-            if (dayIndex < 0 || dayIndex > 6) { alert('❌ יום לא תקין'); return; }
-
-            const isOpen = confirm('האם העסק פתוח ביום זה?');
-            let openTime = '09:00',
-                closeTime = '18:00';
-            if (isOpen) {
-                openTime = prompt('🕐 שעת פתיחה (HH:MM):', '09:00');
-                if (!openTime) return;
-                closeTime = prompt('🕐 שעת סגירה (HH:MM):', '18:00');
-                if (!closeTime) return;
-            }
-
-            const { error } = await sb.from('business_hours').insert([{
+        window.addApp = async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('cName').value.trim();
+            const phone = document.getElementById('cPhone').value.trim();
+            const serviceId = document.getElementById('sId').value;
+            const employeeId = document.getElementById('empId').value || null;
+            const date = document.getElementById('aDate').value;
+            const time = document.getElementById('aTime').value;
+            if (!name || !phone || !serviceId || !date || !time) { alert('❌ יש למלא הכל'); return; }
+            const service = services.find(s => s.id === serviceId);
+            if (!service) { alert('❌ שירות לא נמצא'); return; }
+            const start = new Date(`${date}T${time}:00`);
+            const end = new Date(start.getTime() + service.duration_minutes * 60000);
+            const { error } = await sb.from('appointments').insert([{
                 business_id: BUSINESS_ID,
-                day_of_week: dayIndex,
-                is_open: isOpen,
-                open_time: isOpen ? openTime : null,
-                close_time: isOpen ? closeTime : null
+                customer_name: name,
+                customer_phone: phone,
+                service_id: serviceId,
+                service_name: service.name,
+                employee_id: employeeId,
+                start_time: start.toISOString(),
+                end_time: end.toISOString(),
+                price: service.price,
+                status: 'confirmed'
             }]);
-
             if (error) { alert('❌ ' + error.message); return; }
-            alert('✅ שעות עבודה נשמרו!');
+            alert('✅ תור נוצר!');
             await loadData();
-            switchTab('settings');
+            switchTab('today');
         };
 
-        window.editHour = async function(id, day, isOpen, openTime, closeTime) {
-            const dayName = DAYS[parseInt(day)];
-            const action = prompt(
-                `✏️ עריכת ${dayName}\n\n1. שנה שעות\n2. סגור את היום\n3. פתח את היום\n4. מחק יום\n\nבחר מספר:`);
+        window.cancelApp = async function(id) {
+            if (!confirm('לבטל תור?')) return;
+            const { error } = await sb.from('appointments').update({ status: 'cancelled' }).eq('id', id);
+            if (error) { alert('❌ ' + error.message); return; }
+            alert('✅ בוטל!');
+            await loadData();
+            switchTab('today');
+        };
 
-            if (!action) return;
+        window.addService = async function() {
+            const name = prompt('📝 שם השירות:');
+            if (!name) return;
+            const duration = parseInt(prompt('⏱️ משך (דקות):'));
+            if (!duration) return;
+            const price = parseFloat(prompt('💰 מחיר (ש"ח):'));
+            if (!price) return;
+            const { error } = await sb.from('services').insert([{
+                business_id: BUSINESS_ID,
+                name: name,
+                duration_minutes: duration,
+                price: price,
+                is_active: true
+            }]);
+            if (error) { alert('❌ ' + error.message); return; }
+            alert('✅ שירות נוסף!');
+            await loadData();
+            switchTab('services');
+        };
 
-            try {
-                if (action === '1') {
-                    const newOpen = prompt('🕐 שעת פתיחה (HH:MM):', openTime || '09:00');
-                    if (!newOpen) return;
-                    const newClose = prompt('🕐 שעת סגירה (HH:MM):', closeTime || '18:00');
-                    if (!newClose) return;
-                    const { error } = await sb.from('business_hours').update({
-                        is_open: true,
-                        open_time: newOpen,
-                        close_time: newClose
-                    }).eq('id', id);
-                    if (error) { alert('❌ ' + error.message); return; }
-                    alert('✅ עודכן!');
-                } else if (action === '2') {
-                    const { error } = await sb.from('business_hours').update({ is_open: false, open_time: null,
-                        close_time: null }).eq('id', id);
-                    if (error) { alert('❌ ' + error.message); return; }
-                    alert('✅ היום נסגר!');
-                } else if (action === '3') {
-                    const newOpen = prompt('🕐 שעת פתיחה (HH:MM):', '09:00');
-                    if (!newOpen) return;
-                    const
+        window.deleteService = async function(id) {
+            if (!confirm('למחוק שירות?')) return;
+            const { error } = await sb.from('services').update({ is_active: false }).eq('id', id);
+            if (error) { alert('❌ ' + error.message); return; }
+            alert('✅ נמחק!');
+            await loadData();
+            switchTab('services');
+        };
+
+        window.addEmployee = async function() {
+            const name = prompt('📝 שם העובד:');
+            if (!name) return;
+            const phone = prompt('📞 טלפון:');
+            if (!phone) return;
+            const { error } = await sb.from('employees').insert([{
+                business_id: BUSINESS_ID,
+                name: name,
+                phone: phone,
+                is_active: true
+            }]);
+            if (error) { alert('❌ ' + error.message); return; }
+            alert('✅ עובד נוסף!');
+            await loadData();
+            switchTab('employees');
+        };
+
+        window.deleteEmployee = async function(id) {
+            if (!confirm('למחוק עובד?')) return;
+            const { error } = await sb.from('employees').update({ is_active: false }).eq('id', id);
+            if (error) { alert('❌ '
